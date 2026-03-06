@@ -1,24 +1,38 @@
 "use client";
 
-/**
- * Client-side providers wrapper.
- * Wagmi and React Query must be initialized on the client — this component
- * wraps them so they can be used inside the server-rendered layout.
- */
-
-import { WagmiProvider } from "wagmi";
+import { useState, type ReactNode } from "react";
+import { WagmiProvider, deserialize, cookieToInitialState } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { wagmiConfig } from "@/lib/wagmi/config";
-import { useState } from "react";
 
-export function Providers({ children }: { children: React.ReactNode }) {
-  // QueryClient is instantiated in state so it's stable across re-renders
-  // but not shared across requests on the server.
-  const [queryClient] = useState(() => new QueryClient());
+export function Providers({ 
+  children, 
+  cookie 
+}: { 
+  children: ReactNode;
+  cookie?: string | null; 
+}) {  
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {            
+            retry: 1,
+            refetchOnWindowFocus: false,
+            staleTime: 5 * 60 * 1000,
+          },
+        },
+      })
+  );
+
+  const initialState = cookie ? cookieToInitialState(wagmiConfig, cookie) : undefined;
 
   return (
-    <WagmiProvider config={wagmiConfig}>
+    <WagmiProvider config={wagmiConfig} initialState={initialState}>
       <QueryClientProvider client={queryClient}>
+        {/* Si usas RainbowKit o ConnectKit, sus proveedores irían aquí 
+            envolviendo a {children} 
+        */}
         {children}
       </QueryClientProvider>
     </WagmiProvider>

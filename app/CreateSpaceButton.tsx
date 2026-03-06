@@ -1,27 +1,25 @@
 "use client";
 
-/**
- * CreateSpaceButton — modal form for space creation.
- *
- * After the space entity is created on Arkiv, we redirect to the new-doc
- * editor so the user immediately starts writing. The slug from the form
- * becomes part of the URL.
- */
-
-import { useState } from "react";
-import { useAccount, useWalletClient } from "wagmi";
+import { useState, useEffect } from "react";
+import { useAccount, useWalletClient, useChainId, useSwitchChain } from "wagmi";
 import { useRouter } from "next/navigation";
 import { createSigningClient } from "@/lib/arkiv/client";
 import { createSpace } from "@/lib/arkiv/spaces";
 
+const KAOLIN_CHAIN_ID = 11115 as number; 
+
 export function CreateSpaceButton() {
   const { address, isConnected } = useAccount();
   const { data: walletClient } = useWalletClient();
+  const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
   const router = useRouter();
 
+  const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -29,187 +27,147 @@ export function CreateSpaceButton() {
     visibility: "public" as "public" | "private",
   });
 
-  function handleNameChange(name: string) {
-    setForm((f) => ({
-      ...f,
-      name,
-      // Auto-generate slug from name: lowercase, spaces→hyphens, strip non-alphanumeric
-      slug: name
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/[^a-z0-9-]/g, "")
-        .replace(/-+/g, "-")
-        .replace(/^-|-$/g, ""),
-    }));
-  }
+  useEffect(() => { setMounted(true); }, []);
 
-  function reset() {
-    setForm({ name: "", description: "", slug: "", visibility: "public" });
-    setError(null);
-  }
+  const isWrongNetwork = mounted && isConnected && (chainId as number) !== KAOLIN_CHAIN_ID;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!walletClient || !address) {
-      setError("Wallet not connected.");
+        
+    if (isWrongNetwork && switchChain) {      
+      switchChain({ chainId: KAOLIN_CHAIN_ID as any });
       return;
     }
-    if (!form.name.trim() || !form.slug.trim()) {
-      setError("Name and slug are required.");
+
+    if (!walletClient || !address) {
+      setError("Please connect your wallet first.");
       return;
     }
 
     setLoading(true);
     setError(null);
-    try {
-      const arkivClient = createSigningClient(walletClient);
+
+    try {      
+      // 1. IMPORTANTE: Ahora usamos 'await' porque el cliente valida la red asíncronamente
+      const arkivClient = await createSigningClient(walletClient);
+      
+      // 2. Creación de la entidad en Kaolin
       await createSpace(arkivClient, { ...form, owner: address });
+
+      // 3. Éxito: limpieza y redirección
       setOpen(false);
-      reset();
-      // Go straight to the new-doc editor so the user can start writing.
+      setForm({ name: "", description: "", slug: "", visibility: "public" });
+      
       router.push(`/dashboard/${form.slug}/new/edit`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create space. Try again.");
+      router.refresh();
+    } catch (err: any) {
+      console.error("Space creation error:", err);      
+      const msg = err.message?.toLowerCase() || "";
+      if (msg.includes("rejected")) {
+        setError("Transaction rejected in wallet.");
+      } else if (msg.includes("network")) {
+        setError("Network mismatch. Please switch to Kaolin.");
+      } else {
+        setError("On-chain error. Make sure you have Kaolin ETH for gas.");
+      }
     } finally {
       setLoading(false);
     }
   }
-
-  if (!isConnected) {
-    return (
-      <button
-        disabled
-        title="Connect your wallet first"
-        className="px-5 py-2.5 bg-indigo-600/40 text-white/40 text-sm font-medium rounded-lg cursor-not-allowed select-none"
-      >
-        Create space
-      </button>
-    );
-  }
+  
+  if (!mounted) return <div className="h-10 w-32 bg-[#ede8dc] rounded-lg animate-pulse" />;
 
   return (
     <>
       <button
         onClick={() => setOpen(true)}
-        className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors"
+        className="px-5 py-2.5 bg-[#615050] hover:bg-[#776a6a] text-white text-sm font-medium rounded-lg transition-all shadow-sm"
       >
         + Create space
       </button>
 
-      {/* ── Modal ──────────────────────────────────────────────────────── */}
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={() => { setOpen(false); reset(); }}
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          {/* Backdrop - bloqueado si está firmando */}
+          <div 
+            className="absolute inset-0 bg-[#1a1508]/70 backdrop-blur-sm" 
+            onClick={() => !loading && setOpen(false)} 
           />
+          
+          <div className="relative w-full max-w-md bg-[#f5f1e8] border border-[#d4c9b0] rounded-2xl p-6 shadow-2xl space-y-6 overflow-hidden">
+            {/* Indicador de proceso de firma */}
+            {loading && (
+              <div className="absolute inset-0 bg-[#f5f1e8]/40 backdrop-blur-[1px] z-10 flex flex-col items-center justify-center">
+                <div className="w-10 h-10 border-4 border-[#ad9a6f]/20 border-t-[#615050] rounded-full animate-spin mb-3" />
+                <p className="text-[10px] uppercase tracking-widest font-bold text-[#615050]">Confirming on Kaolin...</p>
+              </div>
+            )}
 
-          {/* Dialog */}
-          <div className="relative w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-6 space-y-5">
             <div>
-              <h2 className="text-lg font-semibold text-white">New space</h2>
-              <p className="text-slate-500 text-xs mt-1">
-                Owned by{" "}
-                <span className="font-mono text-indigo-400">
-                  {address?.slice(0, 6)}…{address?.slice(-4)}
-                </span>
-                {" "}· stored on Arkiv, expires in 365 days
-              </p>
+              <h2 className="text-xl font-serif text-[#615050] italic">Sovereign Space</h2>
+              <p className="text-[#776a6a] text-xs">This will create a permanent entity on-chain.</p>
             </div>
-
+            
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Name */}
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                  Space name
-                </label>
+              <div className="space-y-1.5">
+                <label className="text-[10px] uppercase tracking-widest font-bold text-[#ad9a6f]">Name</label>
                 <input
                   type="text"
+                  placeholder="My Protocol"
                   value={form.name}
-                  onChange={(e) => handleNameChange(e.target.value)}
-                  placeholder="My Protocol Docs"
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setForm(f => ({ 
+                      ...f, 
+                      name: val,                       
+                      slug: val.toLowerCase()
+                        .replace(/\s+/g, "-")
+                        .replace(/[^a-z0-9-]/g, "")
+                        .replace(/-+/g, "-") 
+                    }));
+                  }}
+                  className="w-full px-4 py-3 bg-[#ede8dc] border border-[#c4b89a] rounded-xl text-sm focus:outline-none focus:border-[#ad9a6f] transition-all"
                   required
-                  autoFocus
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-600 text-sm focus:outline-none focus:border-indigo-500 transition-colors"
+                  disabled={loading}
                 />
               </div>
 
-              {/* Slug */}
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                  Slug
-                  <span className="ml-2 font-mono text-slate-600 font-normal">
-                    /docs/{form.slug || "…"}
-                  </span>
-                </label>
-                <input
-                  type="text"
-                  value={form.slug}
-                  onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
-                  placeholder="my-protocol"
-                  required
-                  pattern="[a-z0-9][a-z0-9-]*"
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-600 text-sm font-mono focus:outline-none focus:border-indigo-500 transition-colors"
-                />
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                  Description <span className="text-slate-600 font-normal">(optional)</span>
-                </label>
-                <textarea
-                  value={form.description}
-                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                  placeholder="A short description of this space…"
-                  rows={2}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-600 text-sm focus:outline-none focus:border-indigo-500 transition-colors resize-none"
-                />
-              </div>
-
-              {/* Visibility */}
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                  Visibility
-                </label>
-                <select
-                  value={form.visibility}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, visibility: e.target.value as "public" | "private" }))
-                  }
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-indigo-500 transition-colors"
-                >
-                  <option value="public">Public — listed on the homepage</option>
-                  <option value="private">Private — hidden from public listing</option>
-                </select>
-              </div>
-
-              {error && (
-                <p className="text-red-400 text-xs">{error}</p>
+              {isWrongNetwork && (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-3">
+                  <p className="text-amber-800 text-xs font-medium flex items-center gap-2">
+                    <span>⚠️</span> Red Kaolin requerida (ID: 11115)
+                  </p>
+                  <button 
+                    type="button"
+                    onClick={() => switchChain?.({ chainId: KAOLIN_CHAIN_ID as any })}
+                    className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white text-[10px] uppercase tracking-widest font-bold rounded-lg transition-colors"
+                  >
+                    Switch to Kaolin
+                  </button>
+                </div>
               )}
 
-              <div className="flex gap-3 pt-1">
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-100 rounded-lg">
+                  <p className="text-red-600 text-[11px] font-mono leading-tight">{error}</p>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-4 border-t border-[#d4c9b0]">
                 <button
                   type="button"
-                  onClick={() => { setOpen(false); reset(); }}
-                  className="flex-1 px-4 py-2 text-sm text-slate-400 border border-slate-700 rounded-lg hover:border-slate-500 hover:text-white transition-colors"
+                  disabled={loading}
+                  onClick={() => setOpen(false)}
+                  className="flex-1 py-3 text-xs font-bold uppercase tracking-widest text-[#776a6a] hover:text-[#615050] transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="flex-1 px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                  disabled={loading || isWrongNetwork}
+                  className="flex-1 py-3 bg-[#615050] hover:bg-[#4a3d3d] text-white rounded-xl disabled:opacity-50 text-[10px] uppercase tracking-widest font-bold shadow-lg shadow-[#615050]/20 transition-all flex items-center justify-center gap-2"
                 >
-                  {loading ? (
-                    <>
-                      <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Creating…
-                    </>
-                  ) : (
-                    "Create space"
-                  )}
+                  {loading ? "Signing..." : "Confirm & Create"}
                 </button>
               </div>
             </form>

@@ -21,9 +21,10 @@ interface EditorProps {
   value: string;
   onChange: (value: string) => void;
   height?: number;
+  disabled?: boolean;
 }
 
-export function Editor({ value, onChange, height = 500 }: EditorProps) {
+export function Editor({ value, onChange, height = 500, disabled = false }: EditorProps) {
   return (
     <div data-color-mode="dark">
       <MDEditor
@@ -32,6 +33,7 @@ export function Editor({ value, onChange, height = 500 }: EditorProps) {
         height={height}
         preview="live"
         style={{ background: "transparent" }}
+        readOnly={disabled}
       />
     </div>
   );

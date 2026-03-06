@@ -1,18 +1,14 @@
 /**
- * SnapshotBanner — shown when the user is viewing a doc at a historical block.
- *
- * The "atBlock" URL param triggers this banner. It makes the immutable,
- * block-anchored nature of Arko docs visible to readers — this is a core
- * differentiator that proves what a doc said at any point in time.
+ * SnapshotBanner — Alerta de visualización histórica.
  */
 
 import Link from "next/link";
+import { Clock, ArrowRight } from "lucide-react";
 
 interface SnapshotBannerProps {
   atBlock: number;
   spaceSlug: string;
   docSlug: string;
-  /** The block number of the version being shown */
   docBlockNumber: number;
 }
 
@@ -23,24 +19,31 @@ export function SnapshotBanner({
   docBlockNumber,
 }: SnapshotBannerProps) {
   return (
-    <div className="mb-6 p-4 bg-amber-900/30 border border-amber-600/50 rounded-lg flex items-start gap-3">
-      <span className="text-amber-400 text-lg flex-shrink-0">📸</span>
-      <div className="flex-1 min-w-0">
-        <p className="text-amber-300 font-medium text-sm">
-          Historical snapshot — block {atBlock.toLocaleString()}
-        </p>
-        <p className="text-amber-200/70 text-xs mt-1">
-          You&apos;re viewing this document as it existed at block {atBlock.toLocaleString()}.
-          This version was published at block {docBlockNumber.toLocaleString()}.
-          On-chain version history means this content is cryptographically provable.
-        </p>
+    <div className="mb-10 overflow-hidden rounded-2xl border border-[#ad9a6f]/30 bg-[#1a1508] shadow-2xl">
+      <div className="flex items-center gap-4 p-5">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#ad9a6f]/10 text-[#ad9a6f]">
+          <Clock size={20} />
+        </div>
+        
+        <div className="flex-1 space-y-1">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#F5F0E8]">
+            Point-in-Time Snapshot
+          </p>
+          <p className="text-xs leading-relaxed text-[#ad9a6f]/80">
+            Viewing state as of Kaolin block <span className="text-[#F5F0E8] font-mono">#{atBlock.toLocaleString()}</span>. 
+            This specific version was committed at block <span className="font-mono">#{docBlockNumber.toLocaleString()}</span>.
+          </p>
+        </div>
+
         <Link
           href={`/docs/${spaceSlug}/${docSlug}`}
-          className="inline-block mt-2 text-xs text-amber-400 hover:text-amber-300 underline underline-offset-2"
+          className="flex items-center gap-2 rounded-lg bg-[#F5F0E8] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#1a1508] transition-all hover:bg-white active:scale-95"
         >
-          View latest version →
+          Latest <ArrowRight size={12} />
         </Link>
       </div>
+      
+      <div className="h-1 w-full bg-gradient-to-r from-transparent via-[#ad9a6f]/40 to-transparent" />
     </div>
   );
 }

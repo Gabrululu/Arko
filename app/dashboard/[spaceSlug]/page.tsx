@@ -22,12 +22,12 @@ function truncate(addr: string) {
 // Skeleton rows
 function DocSkeleton() {
   return (
-    <div className="flex items-center justify-between p-4 border border-slate-800 rounded-lg animate-pulse">
+    <div className="flex items-center justify-between p-4 border border-[#d4c9b0] rounded-lg animate-pulse">
       <div className="space-y-2">
-        <div className="h-3.5 w-40 bg-slate-800 rounded" />
-        <div className="h-3 w-24 bg-slate-800 rounded" />
+        <div className="h-3.5 w-40 bg-[#ede8dc] rounded" />
+        <div className="h-3 w-24 bg-[#ede8dc] rounded" />
       </div>
-      <div className="h-7 w-14 bg-slate-800 rounded-lg" />
+      <div className="h-7 w-14 bg-[#ede8dc] rounded-lg" />
     </div>
   );
 }
@@ -70,73 +70,73 @@ export default function SpaceManagePage() {
 
   if (!isConnected) {
     return (
-      <div className="flex flex-col items-center justify-center py-32 text-center">
-        <div className="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-xl mb-4">
+      <div className="max-w-5xl mx-auto px-6 py-10 flex flex-col items-center justify-center min-h-[70vh] text-center">
+        <div className="w-12 h-12 rounded-xl bg-[#f5f1e8] border border-[#d4c9b0] flex items-center justify-center text-xl mb-4">
           🔐
         </div>
-        <p className="text-white font-semibold">Connect your wallet to manage this space.</p>
+        <p className="text-[#615050] font-semibold">Connect your wallet to manage this space.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 max-w-2xl">
+    <div className="space-y-8 max-w-2xl mx-auto px-6 py-10">
 
       {/* ── Breadcrumb ─────────────────────────────────────────────────── */}
-      <nav className="flex items-center gap-2 text-sm text-slate-500">
-        <Link href="/dashboard" className="hover:text-white transition-colors">Dashboard</Link>
+      <nav className="flex items-center gap-2 text-sm text-[#776a6a]">
+        <Link href="/dashboard" className="hover:text-[#615050] transition-colors">Dashboard</Link>
         <span>/</span>
-        <span className="text-slate-300">{space?.name ?? spaceSlug}</span>
+        <span className="text-[#615050]">{space?.name ?? spaceSlug}</span>
       </nav>
 
       {error && (
-        <div className="p-4 bg-red-950/40 border border-red-800/50 rounded-lg text-red-400 text-sm">
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
           {error}
         </div>
       )}
 
       {/* ── Space info ─────────────────────────────────────────────────── */}
       {!loading && space && (
-        <div className="p-5 bg-slate-900 border border-slate-800 rounded-xl space-y-3">
+        <div className="p-5 bg-[#f5f1e8] border border-[#d4c9b0] rounded-xl space-y-3">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-xl font-semibold text-white">{space.name}</h1>
+              <h1 className="text-xl font-semibold text-[#615050]">{space.name}</h1>
               {space.description && (
-                <p className="text-slate-400 text-sm mt-1">{space.description}</p>
+                <p className="text-[#776a6a] text-sm mt-1">{space.description}</p>
               )}
             </div>
             <span
               className={`flex-shrink-0 mt-1 px-1.5 py-0.5 text-xs rounded font-mono border ${
                 space.visibility === "public"
-                  ? "bg-emerald-950 text-emerald-500 border-emerald-800/60"
-                  : "bg-slate-800 text-slate-500 border-slate-700"
+                  ? "bg-emerald-50 text-emerald-600 border-emerald-200"
+                  : "bg-[#ede8dc] text-[#776a6a] border-[#d4c9b0]"
               }`}
             >
               {space.visibility}
             </span>
           </div>
-          <div className="flex items-center gap-4 text-xs text-slate-600 pt-1 border-t border-slate-800">
+          <div className="flex items-center gap-4 text-xs text-[#ad9a6f] pt-1 border-t border-[#d4c9b0]">
             <span>
-              Owner: <span className="font-mono text-slate-500">{truncate(space.owner)}</span>
+              Owner: <span className="font-mono text-[#776a6a]">{truncate(space.owner)}</span>
             </span>
             <span className="font-mono">/docs/{space.slug}</span>
           </div>
           <div className="flex flex-wrap gap-2">
             <Link
               href={`/dashboard/${space.slug}/new/edit`}
-              className="px-3 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors font-medium"
+              className="px-3 py-1.5 text-xs bg-[#615050] hover:bg-[#776a6a] text-white rounded-lg transition-colors font-medium"
             >
               + New doc
             </Link>
             <Link
-              href={`/dashboard/${space.slug}/collaborators`}
-              className="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors"
+              href={`/dashboard/${space.slug}/settings`}
+              className="px-3 py-1.5 text-xs bg-[#ede8dc] hover:bg-[#e0d8c8] text-[#615050] rounded-lg transition-colors"
             >
-              Collaborators
+              Settings
             </Link>
             <Link
               href={`/docs/${space.slug}`}
-              className="px-3 py-1.5 text-xs text-slate-500 hover:text-slate-300 border border-slate-800 hover:border-slate-700 rounded-lg transition-colors"
+              className="px-3 py-1.5 text-xs text-[#776a6a] hover:text-[#615050] border border-[#d4c9b0] hover:border-[#c4b89a] rounded-lg transition-colors"
             >
               Public view ↗
             </Link>
@@ -146,7 +146,7 @@ export default function SpaceManagePage() {
 
       {/* ── Docs list ─────────────────────────────────────────────────── */}
       <div>
-        <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">
+        <h2 className="text-sm font-semibold text-[#776a6a] uppercase tracking-wider mb-4">
           Documents
         </h2>
 
@@ -159,8 +159,8 @@ export default function SpaceManagePage() {
         )}
 
         {!loading && docs.length === 0 && !error && (
-          <div className="py-12 text-center border border-dashed border-slate-800 rounded-lg">
-            <p className="text-slate-600 text-sm">No published docs yet.</p>
+          <div className="py-12 text-center border border-dashed border-[#d4c9b0] rounded-lg">
+            <p className="text-[#776a6a] text-sm">No published docs yet.</p>
           </div>
         )}
 
@@ -169,25 +169,25 @@ export default function SpaceManagePage() {
             {docs.map((doc) => (
               <div
                 key={doc.entityKey}
-                className="flex items-center justify-between p-4 bg-slate-900 border border-slate-800 rounded-lg"
+                className="flex items-center justify-between p-4 bg-[#f5f1e8] border border-[#d4c9b0] rounded-lg"
               >
                 <div>
-                  <p className="text-white text-sm font-medium">{doc.title}</p>
-                  <p className="text-slate-600 text-xs font-mono mt-0.5">
+                  <p className="text-[#615050] text-sm font-medium">{doc.title}</p>
+                  <p className="text-[#ad9a6f] text-xs font-mono mt-0.5">
                     /{doc.slug} · v{doc.version} · block {doc.blockNumber.toLocaleString()}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <Link
                     href={`/docs/${spaceSlug}/${doc.slug}`}
-                    className="px-3 py-1.5 text-xs text-slate-500 hover:text-white border border-slate-800 hover:border-slate-600 rounded-lg transition-colors"
+                    className="px-3 py-1.5 text-xs text-[#776a6a] hover:text-[#615050] border border-[#d4c9b0] hover:border-[#ad9a6f] rounded-lg transition-colors"
                   >
                     View
                   </Link>
                   {canEdit && (
                     <Link
                       href={`/dashboard/${spaceSlug}/${doc.slug}/edit`}
-                      className="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors"
+                      className="px-3 py-1.5 text-xs bg-[#ede8dc] hover:bg-[#e0d8c8] text-[#615050] rounded-lg transition-colors"
                     >
                       Edit
                     </Link>

@@ -18,7 +18,7 @@ import { Editor } from "@/components/Editor";
 import { createSigningClient } from "@/lib/arkiv/client";
 import { getSpaceBySlug, type Space } from "@/lib/arkiv/spaces";
 import { getLatestDoc, saveDoc, getNextVersion, type Doc } from "@/lib/arkiv/docs";
-import { canEditSpace } from "@/lib/arkiv/collaborators";
+import { useCanEdit } from "@/hooks/useCanEdit";
 import Link from "next/link";
 
 export default function EditPage() {
@@ -35,9 +35,11 @@ export default function EditPage() {
   const [space, setSpace] = useState<Space | null>(null);
   const [existing, setExisting] = useState<Doc | null>(null);
   const [nextVersion, setNextVersion] = useState<number>(1);
-  const [canEdit, setCanEdit] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+
+  // Use the hook for permissions
+  const { allowed: canEdit, loading: permissionsLoading } = useCanEdit(space?.entityKey || "", space?.owner || "");
 
   // ── Form state ────────────────────────────────────────────────────────
   const [title, setTitle] = useState("");
@@ -59,11 +61,7 @@ export default function EditPage() {
         if (!s) { setLoadError(`Space "${spaceSlug}" not found.`); return; }
         setSpace(s);
 
-        const [allowed, nv] = await Promise.all([
-          canEditSpace(s.entityKey, address!, s.owner),
-          isNew ? Promise.resolve(1) : getNextVersion(s.entityKey, docSlug),
-        ]);
-        setCanEdit(allowed);
+        const nv = isNew ? 1 : await getNextVersion(s.entityKey, docSlug);
         setNextVersion(nv);
 
         if (!isNew) {
@@ -101,7 +99,8 @@ export default function EditPage() {
 
   // ── Save ──────────────────────────────────────────────────────────────
   async function handleSave(status: "draft" | "published") {
-    if (!walletClient || !address || !space) return;
+    if (!isConnected || !address || !space) return;
+    if (!walletClient) { setSaveError("Wallet client is still loading — please try again."); return; }
     if (!title.trim()) { setSaveError("Title is required."); return; }
     if (!slug.trim()) { setSaveError("Slug is required."); return; }
 
@@ -146,33 +145,33 @@ export default function EditPage() {
 
   if (!isConnected) {
     return (
-      <div className="flex flex-col items-center justify-center py-32 text-center">
-        <div className="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-xl mb-4">
+      <div className="max-w-5xl mx-auto px-6 py-10 flex flex-col items-center justify-center min-h-[70vh] text-center">
+        <div className="w-12 h-12 rounded-xl bg-[#f5f1e8] border border-[#d4c9b0] flex items-center justify-center text-xl mb-4">
           🔐
         </div>
-        <p className="text-white font-semibold">Connect your wallet to edit docs.</p>
+        <p className="text-[#615050] font-semibold">Connect your wallet to edit docs.</p>
       </div>
     );
   }
 
-  if (loading) {
+  if (loading || permissionsLoading) {
     return (
-      <div className="space-y-5 animate-pulse max-w-4xl">
-        <div className="h-4 w-48 bg-slate-800 rounded" />
+      <div className="space-y-5 animate-pulse max-w-4xl mx-auto px-6 py-10">
+        <div className="h-4 w-48 bg-[#ede8dc] rounded" />
         <div className="grid sm:grid-cols-2 gap-4">
-          <div className="h-10 bg-slate-800 rounded-lg" />
-          <div className="h-10 bg-slate-800 rounded-lg" />
+          <div className="h-10 bg-[#ede8dc] rounded-lg" />
+          <div className="h-10 bg-[#ede8dc] rounded-lg" />
         </div>
-        <div className="h-[520px] bg-slate-800 rounded-xl" />
+        <div className="h-[520px] bg-[#ede8dc] rounded-xl" />
       </div>
     );
   }
 
   if (loadError) {
     return (
-      <div className="py-8 space-y-2">
-        <p className="text-red-400 text-sm">{loadError}</p>
-        <Link href="/dashboard" className="text-indigo-400 text-xs hover:underline">
+      <div className="py-8 space-y-2 max-w-4xl mx-auto px-6">
+        <p className="text-red-500 text-sm">{loadError}</p>
+        <Link href="/dashboard" className="text-[#ad9a6f] text-xs hover:underline">
           ← Back to dashboard
         </Link>
       </div>
@@ -181,45 +180,38 @@ export default function EditPage() {
 
   if (!space) return null;
 
-  if (!canEdit) {
-    return (
-      <div className="py-8 space-y-2">
-        <p className="text-red-400 text-sm">
-          You don&apos;t have permission to edit &ldquo;{space.name}&rdquo;.
-        </p>
-        <p className="text-slate-600 text-xs">
-          Ask the space owner ({space.owner.slice(0, 6)}…{space.owner.slice(-4)}) to add you as a collaborator.
-        </p>
-        <Link href="/dashboard" className="text-indigo-400 text-xs hover:underline block mt-2">
-          ← Back to dashboard
-        </Link>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-5 max-w-4xl">
+    <div className="space-y-5 max-w-4xl mx-auto px-6 py-10">
+
+      {/* ── Access Denied Banner ────────────────────────────────────────── */}
+      {!canEdit && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+          <p className="text-red-700 font-medium">
+            Access Denied: Only the owner or authorized collaborators can edit this space.
+          </p>
+        </div>
+      )}
 
       {/* ── Breadcrumb ─────────────────────────────────────────────────── */}
-      <nav className="flex items-center gap-2 text-sm text-slate-500">
-        <Link href="/dashboard" className="hover:text-white transition-colors">Dashboard</Link>
+      <nav className="flex items-center gap-2 text-sm text-[#776a6a]">
+        <Link href="/dashboard" className="hover:text-[#615050] transition-colors">Dashboard</Link>
         <span>/</span>
-        <Link href={`/dashboard/${spaceSlug}`} className="hover:text-white transition-colors">
+        <Link href={`/dashboard/${spaceSlug}`} className="hover:text-[#615050] transition-colors">
           {space.name}
         </Link>
         <span>/</span>
-        <span className="text-slate-300">
+        <span className="text-[#615050]">
           {isNew ? "New doc" : (existing?.title || docSlug)}
         </span>
       </nav>
 
       {/* ── Version badge ─────────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
-        <span className="px-2.5 py-1 bg-indigo-950 border border-indigo-800/60 text-indigo-400 text-xs font-mono rounded-lg">
+        <span className="px-2.5 py-1 bg-[#f0ebe0] border border-[#ad9a6f]/60 text-[#ad9a6f] text-xs font-mono rounded-lg">
           Creating version {nextVersion}
         </span>
         {existing && (
-          <span className="text-slate-600 text-xs">
+          <span className="text-[#776a6a] text-xs">
             Latest on-chain: v{existing.version} · block {existing.blockNumber.toLocaleString()}
           </span>
         )}
@@ -228,19 +220,20 @@ export default function EditPage() {
       {/* ── Metadata fields ────────────────────────────────────────────── */}
       <div className="grid sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5">Title</label>
+          <label className="block text-xs font-medium text-[#776a6a] mb-1.5">Title</label>
           <input
             type="text"
             value={title}
             onChange={(e) => handleTitleChange(e.target.value)}
             placeholder="Getting Started"
-            className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-600 text-sm focus:outline-none focus:border-indigo-500 transition-colors"
+            disabled={!canEdit}
+            className="w-full px-3 py-2 bg-[#ede8dc] border border-[#c4b89a] rounded-lg text-[#615050] placeholder-[#ad9a6f]/60 text-sm focus:outline-none focus:border-[#ad9a6f] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5">
+          <label className="block text-xs font-medium text-[#776a6a] mb-1.5">
             Slug
-            <span className="ml-2 font-mono text-slate-600 font-normal">
+            <span className="ml-2 font-mono text-[#ad9a6f] font-normal">
               /docs/{spaceSlug}/{slug || "…"}
             </span>
           </label>
@@ -249,37 +242,38 @@ export default function EditPage() {
             value={slug}
             onChange={(e) => setSlug(e.target.value)}
             placeholder="getting-started"
-            className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-600 text-sm font-mono focus:outline-none focus:border-indigo-500 transition-colors"
+            disabled={!canEdit}
+            className="w-full px-3 py-2 bg-[#ede8dc] border border-[#c4b89a] rounded-lg text-[#615050] placeholder-[#ad9a6f]/60 text-sm font-mono focus:outline-none focus:border-[#ad9a6f] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           />
         </div>
       </div>
 
       {/* ── Markdown editor ────────────────────────────────────────────── */}
-      <Editor value={content} onChange={setContent} height={520} />
+      <Editor value={content} onChange={setContent} height={520} disabled={!canEdit} />
 
       {/* ── Immutability note ──────────────────────────────────────────── */}
-      <p className="text-xs text-slate-600">
+      <p className="text-xs text-[#776a6a]">
         Each save creates a new immutable Arkiv entity. Publishing redirects to the live doc.
         Drafts stay here for further editing.
       </p>
 
       {saveError && (
-        <p className="text-red-400 text-sm">{saveError}</p>
+        <p className="text-red-500 text-sm">{saveError}</p>
       )}
 
       {/* ── Actions ────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 pb-8">
         <button
           onClick={() => handleSave("draft")}
-          disabled={saving}
-          className="px-5 py-2.5 text-sm text-slate-300 border border-slate-700 rounded-lg hover:border-slate-500 disabled:opacity-40 transition-colors"
+          disabled={!canEdit || saving}
+          className="px-5 py-2.5 text-sm text-[#776a6a] border border-[#d4c9b0] rounded-lg hover:border-[#ad9a6f] disabled:opacity-40 transition-colors"
         >
           {saving ? "Saving…" : "Save draft"}
         </button>
         <button
           onClick={() => handleSave("published")}
-          disabled={saving}
-          className="px-5 py-2.5 text-sm bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-medium rounded-lg transition-colors flex items-center gap-2"
+          disabled={!canEdit || saving}
+          className="px-5 py-2.5 text-sm bg-[#615050] hover:bg-[#776a6a] disabled:opacity-40 text-white font-medium rounded-lg transition-colors flex items-center gap-2"
         >
           {saving ? (
             <>
@@ -293,7 +287,7 @@ export default function EditPage() {
         {existing && (
           <Link
             href={`/docs/${spaceSlug}/${existing.slug}/history`}
-            className="ml-auto text-xs text-slate-600 hover:text-slate-400 transition-colors"
+            className="ml-auto text-xs text-[#ad9a6f] hover:text-[#776a6a] transition-colors"
           >
             Version history →
           </Link>

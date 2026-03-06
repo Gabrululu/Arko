@@ -62,7 +62,8 @@ export default function CollaboratorsPage() {
 
   async function handleInvite(e: React.FormEvent) {
     e.preventDefault();
-    if (!walletClient || !space) return;
+    if (!space) return;
+    if (!walletClient) { setInviteError("Wallet client is still loading — please try again."); return; }
     if (!inviteWallet.match(/^0x[0-9a-fA-F]{40}$/)) {
       setInviteError("Enter a valid Ethereum address (0x followed by 40 hex characters).");
       return;
@@ -90,11 +91,11 @@ export default function CollaboratorsPage() {
 
   if (!isConnected) {
     return (
-      <div className="flex flex-col items-center justify-center py-32 text-center">
-        <div className="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-xl mb-4">
+      <div className="max-w-5xl mx-auto px-6 py-10 flex flex-col items-center justify-center min-h-[70vh] text-center">
+        <div className="w-12 h-12 rounded-xl bg-[#f5f1e8] border border-[#d4c9b0] flex items-center justify-center text-xl mb-4">
           🔐
         </div>
-        <p className="text-white font-semibold">Connect your wallet to manage collaborators.</p>
+        <p className="text-[#615050] font-semibold">Connect your wallet to manage collaborators.</p>
       </div>
     );
   }
@@ -102,38 +103,38 @@ export default function CollaboratorsPage() {
   const isOwner = address?.toLowerCase() === space?.owner.toLowerCase();
 
   return (
-    <div className="space-y-8 max-w-2xl">
+    <div className="space-y-8 max-w-2xl mx-auto px-6 py-10">
 
       {/* ── Breadcrumb ─────────────────────────────────────────────────── */}
-      <nav className="flex items-center gap-2 text-sm text-slate-500">
-        <Link href="/dashboard" className="hover:text-white transition-colors">Dashboard</Link>
+      <nav className="flex items-center gap-2 text-sm text-[#776a6a]">
+        <Link href="/dashboard" className="hover:text-[#615050] transition-colors">Dashboard</Link>
         <span>/</span>
-        <Link href={`/dashboard/${spaceSlug}`} className="hover:text-white transition-colors">
+        <Link href={`/dashboard/${spaceSlug}`} className="hover:text-[#615050] transition-colors">
           {space?.name ?? spaceSlug}
         </Link>
         <span>/</span>
-        <span className="text-slate-300">Collaborators</span>
+        <span className="text-[#615050]">Collaborators</span>
       </nav>
 
       {error && (
-        <div className="p-4 bg-red-950/40 border border-red-800/50 rounded-lg text-red-400 text-sm">
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
           {error}
         </div>
       )}
 
       {/* ── Invite form (owner only) ────────────────────────────────────── */}
       {isOwner && (
-        <div className="p-5 bg-slate-900 border border-slate-800 rounded-xl space-y-4">
+        <div className="p-5 bg-[#f5f1e8] border border-[#d4c9b0] rounded-xl space-y-4">
           <div>
-            <h2 className="font-semibold text-white text-sm">Invite collaborator</h2>
-            <p className="text-slate-600 text-xs mt-1">
+            <h2 className="font-semibold text-[#615050] text-sm">Invite collaborator</h2>
+            <p className="text-[#776a6a] text-xs mt-1">
               Creates a collaborator entity on Arkiv with a 90-day TTL.
               Re-invite to renew access before expiry.
             </p>
           </div>
 
           {inviteSuccess && (
-            <p className="text-emerald-400 text-xs">✓ Collaborator added successfully.</p>
+            <p className="text-emerald-600 text-xs">✓ Collaborator added successfully.</p>
           )}
 
           <form onSubmit={handleInvite} className="space-y-3">
@@ -143,13 +144,13 @@ export default function CollaboratorsPage() {
               onChange={(e) => { setInviteWallet(e.target.value); setInviteSuccess(false); }}
               placeholder="0x1234…abcd"
               required
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-600 text-sm font-mono focus:outline-none focus:border-indigo-500 transition-colors"
+              className="w-full px-3 py-2 bg-[#ede8dc] border border-[#c4b89a] rounded-lg text-[#615050] placeholder-[#ad9a6f]/60 text-sm font-mono focus:outline-none focus:border-[#ad9a6f] transition-colors"
             />
             <div className="flex gap-3">
               <select
                 value={inviteRole}
                 onChange={(e) => setInviteRole(e.target.value as "editor" | "viewer")}
-                className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-indigo-500 transition-colors"
+                className="px-3 py-2 bg-[#ede8dc] border border-[#c4b89a] rounded-lg text-[#615050] text-sm focus:outline-none focus:border-[#ad9a6f] transition-colors"
               >
                 <option value="editor">Editor — can create and publish docs</option>
                 <option value="viewer">Viewer — read access (future use)</option>
@@ -157,7 +158,7 @@ export default function CollaboratorsPage() {
               <button
                 type="submit"
                 disabled={inviting}
-                className="px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-medium rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap"
+                className="px-4 py-2 text-sm bg-[#615050] hover:bg-[#776a6a] disabled:opacity-50 text-white font-medium rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap"
               >
                 {inviting ? (
                   <>
@@ -169,23 +170,23 @@ export default function CollaboratorsPage() {
                 )}
               </button>
             </div>
-            {inviteError && <p className="text-red-400 text-xs">{inviteError}</p>}
+            {inviteError && <p className="text-red-500 text-xs">{inviteError}</p>}
           </form>
         </div>
       )}
 
       {/* ── Collaborator list ───────────────────────────────────────────── */}
       <div>
-        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">
+        <h2 className="text-xs font-semibold text-[#776a6a] uppercase tracking-wider mb-4">
           Access list
         </h2>
 
         {loading && (
           <div className="space-y-2 animate-pulse">
             {[1, 2].map((i) => (
-              <div key={i} className="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-lg">
-                <div className="h-3.5 w-36 bg-slate-800 rounded" />
-                <div className="h-5 w-14 bg-slate-800 rounded" />
+              <div key={i} className="flex items-center justify-between p-3 bg-[#f5f1e8] border border-[#d4c9b0] rounded-lg">
+                <div className="h-3.5 w-36 bg-[#ede8dc] rounded" />
+                <div className="h-5 w-14 bg-[#ede8dc] rounded" />
               </div>
             ))}
           </div>
@@ -194,14 +195,14 @@ export default function CollaboratorsPage() {
         {!loading && space && (
           <div className="space-y-2">
             {/* Owner row */}
-            <div className="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-lg">
-              <span className="font-mono text-sm text-slate-300" title={space.owner}>
+            <div className="flex items-center justify-between p-3 bg-[#f5f1e8] border border-[#d4c9b0] rounded-lg">
+              <span className="font-mono text-sm text-[#615050]" title={space.owner}>
                 {truncate(space.owner)}
                 {address?.toLowerCase() === space.owner.toLowerCase() && (
-                  <span className="ml-2 text-slate-600">(you)</span>
+                  <span className="ml-2 text-[#ad9a6f]">(you)</span>
                 )}
               </span>
-              <span className="px-2 py-0.5 text-xs bg-indigo-950 text-indigo-400 border border-indigo-800/60 rounded font-mono">
+              <span className="px-2 py-0.5 text-xs bg-[#f0ebe0] text-[#ad9a6f] border border-[#ad9a6f]/60 rounded font-mono">
                 owner
               </span>
             </div>
@@ -209,20 +210,20 @@ export default function CollaboratorsPage() {
             {collaborators.map((c) => (
               <div
                 key={c.entityKey}
-                className="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-lg"
+                className="flex items-center justify-between p-3 bg-[#f5f1e8] border border-[#d4c9b0] rounded-lg"
               >
-                <span className="font-mono text-sm text-slate-300" title={c.wallet}>
+                <span className="font-mono text-sm text-[#615050]" title={c.wallet}>
                   {truncate(c.wallet)}
                   {address?.toLowerCase() === c.wallet.toLowerCase() && (
-                    <span className="ml-2 text-slate-600">(you)</span>
+                    <span className="ml-2 text-[#ad9a6f]">(you)</span>
                   )}
                 </span>
                 <div className="flex items-center gap-2">
                   <span
                     className={`px-2 py-0.5 text-xs rounded font-mono border ${
                       c.role === "editor"
-                        ? "bg-emerald-950 text-emerald-500 border-emerald-800/60"
-                        : "bg-slate-800 text-slate-500 border-slate-700"
+                        ? "bg-emerald-50 text-emerald-600 border-emerald-200"
+                        : "bg-[#ede8dc] text-[#776a6a] border-[#d4c9b0]"
                     }`}
                   >
                     {c.role}
@@ -232,14 +233,14 @@ export default function CollaboratorsPage() {
             ))}
 
             {collaborators.length === 0 && (
-              <p className="text-slate-600 text-xs py-2">
+              <p className="text-[#776a6a] text-xs py-2">
                 No collaborators yet. Only you can edit this space.
               </p>
             )}
           </div>
         )}
 
-        <p className="text-slate-700 text-xs mt-4">
+        <p className="text-[#ad9a6f] text-xs mt-4">
           ⏱ Collaborator access is valid for 90 days from grant date (Arkiv TTL).
           Arkiv automatically excludes expired entities from queries.
         </p>
