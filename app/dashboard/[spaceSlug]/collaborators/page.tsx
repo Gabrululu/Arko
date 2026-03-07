@@ -73,7 +73,7 @@ export default function CollaboratorsPage() {
     setInviteError(null);
     setInviteSuccess(false);
     try {
-      const arkivClient = createSigningClient(walletClient);
+      const arkivClient = await createSigningClient(walletClient);
       await addCollaborator(arkivClient, {
         spaceId: space.entityKey,
         wallet: inviteWallet,

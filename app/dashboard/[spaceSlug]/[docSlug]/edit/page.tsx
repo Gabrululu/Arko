@@ -112,7 +112,7 @@ export default function EditPage() {
       const versionToUse = await getNextVersion(space.entityKey, targetSlug);
       setNextVersion(versionToUse);
 
-      const arkivClient = createSigningClient(walletClient);
+      const arkivClient = await createSigningClient(walletClient);
       await saveDoc(arkivClient, {
         title: title.trim(),
         content,
