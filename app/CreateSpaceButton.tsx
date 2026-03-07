@@ -35,12 +35,14 @@ export function CreateSpaceButton() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
         
+
     if (isWrongNetwork && switchChain) {      
       switchChain({ chainId: KAOLIN_CHAIN_ID });
       return;
     }
 
-    if (!walletClient || !address) {
+    // Mejor chequeo de conexión
+    if (!isConnected || !walletClient || !address) {
       setError("Please connect your wallet first.");
       return;
     }
@@ -95,7 +97,7 @@ export function CreateSpaceButton() {
             onClick={() => !loading && setOpen(false)} 
           />
           
-          <div className="relative w-full max-w-md bg-[#f5f1e8] border border-[#d4c9b0] rounded-2xl p-6 shadow-2xl space-y-6 overflow-hidden">
+          <div className="relative w-full max-w-md bg-[#f5f1e8] border border-[#d4c9b0] rounded-2xl p-6 shadow-2xl space-y-6 overflow-hidden flex flex-col items-center justify-center">
             {/* Indicador de proceso de firma */}
             {loading && (
               <div className="absolute inset-0 bg-[#f5f1e8]/40 backdrop-blur-[1px] z-10 flex flex-col items-center justify-center">
@@ -104,12 +106,12 @@ export function CreateSpaceButton() {
               </div>
             )}
 
-            <div>
+            <div className="w-full text-center">
               <h2 className="text-xl font-serif text-[#615050] italic">Sovereign Space</h2>
               <p className="text-[#776a6a] text-xs">This will create a permanent entity on-chain.</p>
             </div>
             
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4 w-full">
               <div className="space-y-1.5">
                 <label className="text-[10px] uppercase tracking-widest font-bold text-[#ad9a6f]">Name</label>
                 <input
@@ -134,8 +136,8 @@ export function CreateSpaceButton() {
               </div>
 
               {isWrongNetwork && (
-                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-3">
-                  <p className="text-amber-800 text-xs font-medium flex items-center gap-2">
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-3 text-center">
+                  <p className="text-amber-800 text-xs font-medium flex items-center gap-2 justify-center">
                     <span>⚠️</span> Red Kaolin requerida (ID: {KAOLIN_CHAIN_ID})
                   </p>
                   <button 
@@ -149,24 +151,24 @@ export function CreateSpaceButton() {
               )}
 
               {error && (
-                <div className="p-3 bg-red-50 border border-red-100 rounded-lg">
+                <div className="p-3 bg-red-50 border border-red-100 rounded-lg text-center">
                   <p className="text-red-600 text-[11px] font-mono leading-tight">{error}</p>
                 </div>
               )}
 
-              <div className="flex gap-3 pt-4 border-t border-[#d4c9b0]">
+              <div className="flex gap-3 pt-4 border-t border-[#d4c9b0] justify-center">
                 <button
                   type="button"
                   disabled={loading}
                   onClick={() => setOpen(false)}
-                  className="flex-1 py-3 text-xs font-bold uppercase tracking-widest text-[#776a6a] hover:text-[#615050] transition-colors"
+                  className="py-3 px-6 text-xs font-bold uppercase tracking-widest text-[#776a6a] hover:text-[#615050] transition-colors rounded-xl"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading || isWrongNetwork}
-                  className="flex-1 py-3 bg-[#615050] hover:bg-[#4a3d3d] text-white rounded-xl disabled:opacity-50 text-[10px] uppercase tracking-widest font-bold shadow-lg shadow-[#615050]/20 transition-all flex items-center justify-center gap-2"
+                  className="py-3 px-6 bg-[#615050] hover:bg-[#4a3d3d] text-white rounded-xl disabled:opacity-50 text-[10px] uppercase tracking-widest font-bold shadow-lg shadow-[#615050]/20 transition-all flex items-center justify-center gap-2"
                 >
                   {loading ? "Signing..." : "Confirm & Create"}
                 </button>
