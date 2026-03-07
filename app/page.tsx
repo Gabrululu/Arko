@@ -292,7 +292,7 @@ export default function HomePage() {
                     { f: "Point-in-time proof", a: "validAtBlock() ✓", t: "Not possible" },
                     { f: "Account required", a: "Wallet only", t: "Email + password" },
                     { f: "Backend infrastructure", a: "None", t: "Servers + databases" },
-                  ].map((row, i) => (
+                  ].map((row) => (
                     <tr key={row.f} className="hover:bg-slate-50 transition-colors">
                       <td className="py-4 px-5 text-[#615050] border-b border-[#f0ebe0] font-medium">
                         {row.f}

@@ -38,7 +38,7 @@ export function CollaboratorsManager({ spaceId }: { spaceId: string }) {
       const newList = await listCollaborators(spaceId);
       setCollaborators(newList);
       setTimeout(() => setToast(null), 3000);
-    } catch (e) {
+    } catch {
       setToast("Error: Failed to add collaborator.");
       setTimeout(() => setToast(null), 3000);
     } finally {

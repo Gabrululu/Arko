@@ -7,11 +7,26 @@ import {
   createWalletClient,
   custom,
   http,
-  type WalletClient as ArkivWalletClient,
 } from "@arkiv-network/sdk";
 import { kaolin } from "@arkiv-network/sdk/chains";
+import type { Account, PrivateKeyAccount } from "viem";
 
 const KAOLIN_ID = kaolin.id;
+
+interface WagmiWalletClientLike {
+  account?: Account;
+  getChainId(): Promise<number>;
+  transport: object;
+}
+
+export interface ArkivSigningClient {
+  createEntity(params: {
+    payload: Uint8Array;
+    contentType: string;
+    attributes: Array<{ key: string; value: string }>;
+    expiresIn?: unknown;
+  }): Promise<{ entityKey: string }>;
+}
 
 // ─── Public (read-only) client ───────────────────────────────────────────────
 export const publicClient = createPublicClient({
@@ -20,7 +35,7 @@ export const publicClient = createPublicClient({
 });
 
 // ─── Signing client factory (browser wallet) ─────────────────────────────────
-export async function createSigningClient(viemWalletClient: any): Promise<ArkivWalletClient> {
+export async function createSigningClient(viemWalletClient: WagmiWalletClientLike): Promise<ArkivSigningClient> {
   // 1. Verificación de cuenta
   const account = viemWalletClient.account;
   if (!account) {
@@ -29,7 +44,7 @@ export async function createSigningClient(viemWalletClient: any): Promise<ArkivW
 
   // 2. Validación de Red (Seguridad Proactiva)
   const currentChainId = await viemWalletClient.getChainId();
-  
+
   if (Number(currentChainId) !== KAOLIN_ID) {
     throw new Error(
       `Red incorrecta. Arko requiere Kaolin (ID: ${KAOLIN_ID}). ` +
@@ -40,20 +55,20 @@ export async function createSigningClient(viemWalletClient: any): Promise<ArkivW
   // 3. Inicialización del cliente de Arkiv
   const arkivWallet = createWalletClient({
     chain: kaolin,
-    transport: custom(viemWalletClient.transport),
+    transport: custom(viemWalletClient.transport as Parameters<typeof custom>[0]),
     account: account,
   });
 
-  return arkivWallet as any;
+  return arkivWallet as unknown as ArkivSigningClient;
 }
 
 // ─── Signing client factory (private key — para scripts/testing) ──────────────
-export function createSigningClientFromKey(privateKeyAccount: any): ArkivWalletClient {
+export function createSigningClientFromKey(privateKeyAccount: PrivateKeyAccount): ArkivSigningClient {
   const client = createWalletClient({
     chain: kaolin,
     transport: http("https://kaolin.hoodi.arkiv.network/rpc"),
     account: privateKeyAccount,
   });
-  
-  return client as any;
+
+  return client as unknown as ArkivSigningClient;
 }

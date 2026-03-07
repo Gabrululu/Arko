@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { WagmiProvider, deserialize, cookieToInitialState } from "wagmi";
+import { WagmiProvider, cookieToInitialState } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { wagmiConfig } from "@/lib/wagmi/config";
 

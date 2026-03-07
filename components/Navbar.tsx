@@ -5,8 +5,9 @@ import { useAccount, useChainId, useSwitchChain, useDisconnect } from "wagmi";
 import Link from "next/link";
 import { CreateSpaceButton } from "../app/CreateSpaceButton";
 import { ChevronDown, Wallet, LogOut, ExternalLink } from "lucide-react";
+import { kaolin } from "@arkiv-network/sdk/chains";
 
-const KAOLIN_ID = 11115;
+const KAOLIN_ID = kaolin.id;
 
 export function Navbar() {
   const { isConnected, address } = useAccount();
@@ -28,7 +29,7 @@ export function Navbar() {
     );
   }
 
-  const isWrongNetwork = isConnected && (chainId as number) !== KAOLIN_ID;
+  const isWrongNetwork = isConnected && chainId !== KAOLIN_ID;
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-[#d4c9b0]/30 bg-[#fcfcfc]/80 backdrop-blur-md">
@@ -60,7 +61,7 @@ export function Navbar() {
           {/* Alerta de Red Incorrecta */}
           {isWrongNetwork && (
             <button 
-              onClick={() => switchChain?.({ chainId: KAOLIN_ID as any })}
+              onClick={() => switchChain?.({ chainId: KAOLIN_ID })}
               className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-[9px] font-bold uppercase tracking-widest animate-pulse hover:bg-amber-100 transition-colors"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
@@ -118,7 +119,7 @@ export function Navbar() {
       {/* Alerta Mobile para Red */}
       {isWrongNetwork && (
         <div 
-          onClick={() => switchChain?.({ chainId: KAOLIN_ID as any })}
+          onClick={() => switchChain?.({ chainId: KAOLIN_ID })}
           className="lg:hidden w-full bg-amber-500 text-white text-[9px] font-bold py-1 text-center uppercase tracking-[0.2em] cursor-pointer"
         >
           Warning: Switch to Kaolin Testnet

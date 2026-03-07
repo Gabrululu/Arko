@@ -3,6 +3,7 @@
  */
 
 import { publicClient } from "./client";
+import type { ArkivSigningClient } from "./client";
 import { ExpirationTime } from "@arkiv-network/sdk/utils";
 import { eq } from "@arkiv-network/sdk/query";
 import type { Entity } from "@arkiv-network/sdk";
@@ -17,7 +18,7 @@ export interface Collaborator {
 // ─── Create ───────────────────────────────────────────────────────────────────
 
 export async function addCollaborator(
-  walletClient: any, 
+  walletClient: ArkivSigningClient,
   params: {
     spaceId: string;
     wallet: string;

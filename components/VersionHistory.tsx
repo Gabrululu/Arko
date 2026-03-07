@@ -4,7 +4,7 @@
 
 import Link from "next/link";
 import type { Doc } from "@/lib/arkiv/docs";
-import { History, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 interface VersionHistoryProps {
   versions: Doc[];

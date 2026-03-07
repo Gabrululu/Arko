@@ -5,8 +5,9 @@ import { useAccount, useWalletClient, useChainId, useSwitchChain } from "wagmi";
 import { useRouter } from "next/navigation";
 import { createSigningClient } from "@/lib/arkiv/client";
 import { createSpace } from "@/lib/arkiv/spaces";
+import { kaolin } from "@arkiv-network/sdk/chains";
 
-const KAOLIN_CHAIN_ID = 11115 as number; 
+const KAOLIN_CHAIN_ID = kaolin.id;
 
 export function CreateSpaceButton() {
   const { address, isConnected } = useAccount();
@@ -29,13 +30,13 @@ export function CreateSpaceButton() {
 
   useEffect(() => { setMounted(true); }, []);
 
-  const isWrongNetwork = mounted && isConnected && (chainId as number) !== KAOLIN_CHAIN_ID;
+  const isWrongNetwork = mounted && isConnected && chainId !== KAOLIN_CHAIN_ID;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
         
     if (isWrongNetwork && switchChain) {      
-      switchChain({ chainId: KAOLIN_CHAIN_ID as any });
+      switchChain({ chainId: KAOLIN_CHAIN_ID });
       return;
     }
 
@@ -60,9 +61,9 @@ export function CreateSpaceButton() {
       
       router.push(`/dashboard/${form.slug}/new/edit`);
       router.refresh();
-    } catch (err: any) {
-      console.error("Space creation error:", err);      
-      const msg = err.message?.toLowerCase() || "";
+    } catch (err: unknown) {
+      console.error("Space creation error:", err);
+      const msg = err instanceof Error ? err.message.toLowerCase() : "";
       if (msg.includes("rejected")) {
         setError("Transaction rejected in wallet.");
       } else if (msg.includes("network")) {
@@ -139,7 +140,7 @@ export function CreateSpaceButton() {
                   </p>
                   <button 
                     type="button"
-                    onClick={() => switchChain?.({ chainId: KAOLIN_CHAIN_ID as any })}
+                    onClick={() => switchChain?.({ chainId: KAOLIN_CHAIN_ID })}
                     className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white text-[10px] uppercase tracking-widest font-bold rounded-lg transition-colors"
                   >
                     Switch to Kaolin

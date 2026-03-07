@@ -3,6 +3,7 @@
  */
 
 import { publicClient } from "./client";
+import type { ArkivSigningClient } from "./client";
 import { ExpirationTime, jsonToPayload } from "@arkiv-network/sdk/utils";
 import { eq } from "@arkiv-network/sdk/query";
 import type { Entity } from "@arkiv-network/sdk";
@@ -19,8 +20,8 @@ export interface Space {
 
 // ─── Create ───────────────────────────────────────────────────────────────────
 
-export async function createSpace( 
-  walletClient: any,
+export async function createSpace(
+  walletClient: ArkivSigningClient,
   params: {
     name: string;
     description: string;
@@ -97,7 +98,7 @@ export async function listSpacesByOwner(owner: string): Promise<Space[]> {
 // ─── Renew ───────────────────────────────────────────────────────────────────
 
 export async function renewSpace(
-  walletClient: any,
+  walletClient: ArkivSigningClient,
   spaceId: string
 ): Promise<string> {
   // Obtener la entidad existente
@@ -168,7 +169,7 @@ function entityToSpace(entity: Entity): Space {
   let payload: { name?: string; description?: string } = {};
   try {    
     payload = entity.toJson() as { name?: string; description?: string };
-  } catch (e) {
+  } catch {
     console.warn("Could not parse payload for entity:", entity.key);
   }
 

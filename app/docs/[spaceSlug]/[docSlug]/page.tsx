@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useAccount } from "wagmi";
 import Link from "next/link";
-import { getSpaceBySlug } from "@/lib/arkiv/spaces";
+import { getSpaceBySlug, type Space } from "@/lib/arkiv/spaces";
 import { getLatestDoc, getDocAtBlock, type Doc } from "@/lib/arkiv/docs";
 import { canEditSpace } from "@/lib/arkiv/collaborators";
 import { DocViewer } from "@/components/DocViewer";
@@ -24,7 +24,7 @@ export default function DocPage() {
   const atBlockRaw = searchParams.get("atBlock");
   const atBlock = atBlockRaw ? parseInt(atBlockRaw, 10) : null;
 
-  const [space, setSpace] = useState<any>(null);
+  const [space, setSpace] = useState<Space | null>(null);
   const [doc, setDoc] = useState<Doc | null>(null);
   const [canView, setCanView] = useState(false);
   const [loading, setLoading] = useState(true);

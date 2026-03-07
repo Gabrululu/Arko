@@ -9,7 +9,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { getSpaceBySlug } from "@/lib/arkiv/spaces";
+import { getSpaceBySlug, type Space } from "@/lib/arkiv/spaces";
 import { listDocsInSpace, type Doc } from "@/lib/arkiv/docs";
 
 function truncate(addr: string) {
@@ -20,7 +20,7 @@ export default function SpacePage() {
   const params = useParams();
   const spaceSlug = params.spaceSlug as string;
 
-  const [space, setSpace] = useState<any>(null);
+  const [space, setSpace] = useState<Space | null>(null);
   const [docs, setDocs] = useState<Doc[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

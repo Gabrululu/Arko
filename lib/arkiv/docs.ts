@@ -3,6 +3,7 @@
  */
 
 import { publicClient } from "./client";
+import type { ArkivSigningClient } from "./client";
 import { ExpirationTime, jsonToPayload } from "@arkiv-network/sdk/utils";
 import { eq } from "@arkiv-network/sdk/query";
 import type { Entity } from "@arkiv-network/sdk";
@@ -22,7 +23,7 @@ export interface Doc {
 // ─── Save  ────────────────────────────────
 
 export async function saveDoc(
-  walletClient: any, 
+  walletClient: ArkivSigningClient,
   params: {
     title: string;
     content: string;
@@ -181,7 +182,7 @@ function entityToDoc(entity: Entity): Doc {
   let payload: { title?: string; content?: string } = {};
   try {
     payload = entity.toJson() as { title?: string; content?: string };
-  } catch (e) {
+  } catch {
     console.warn("Error decoding doc payload:", entity.key);
   }
 
