@@ -6,13 +6,13 @@
  * dropdown to disconnect when connected.
  */
 
-import { useAccount, useConnect, useDisconnect } from "wagmi";
-import { injected } from "wagmi/connectors";
+import { useAccount, useConnect, useConnectors, useDisconnect } from "wagmi";
 import { useState, useRef, useEffect } from "react";
 
 export function WalletConnect() {
   const { address, isConnected } = useAccount();
   const { connect, isPending } = useConnect();
+  const connectors = useConnectors();
   const { disconnect } = useDisconnect();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -43,7 +43,7 @@ export function WalletConnect() {
   if (!isConnected) {
     return (
       <button
-        onClick={() => connect({ connector: injected() })}
+        onClick={() => connect({ connector: connectors[0] })}
         disabled={isPending}
         className="px-4 py-1.5 bg-[#615050] hover:bg-[#776a6a] disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-colors"
       >
