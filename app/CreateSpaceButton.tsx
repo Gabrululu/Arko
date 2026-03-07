@@ -136,7 +136,7 @@ export function CreateSpaceButton() {
               {isWrongNetwork && (
                 <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-3">
                   <p className="text-amber-800 text-xs font-medium flex items-center gap-2">
-                    <span>⚠️</span> Red Kaolin requerida (ID: 11115)
+                    <span>⚠️</span> Red Kaolin requerida (ID: {KAOLIN_CHAIN_ID})
                   </p>
                   <button 
                     type="button"

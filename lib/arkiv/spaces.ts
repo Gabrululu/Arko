@@ -15,7 +15,7 @@ export interface Space {
   slug: string;
   owner: string;
   visibility: "public" | "private";
-  expiresAt?: Date;
+
 }
 
 // ─── Create ───────────────────────────────────────────────────────────────────
@@ -180,6 +180,5 @@ function entityToSpace(entity: Entity): Space {
     slug: attrs["slug"] || "",
     owner: attrs["owner"] || "0x0",
     visibility: (attrs["visibility"] || "public") as "public" | "private",
-    expiresAt: entity.expiresAt,
   };
 }
