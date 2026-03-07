@@ -26,14 +26,13 @@ interface EditorProps {
 
 export function Editor({ value, onChange, height = 500, disabled = false }: EditorProps) {
   return (
-    <div data-color-mode="dark">
+    <div data-color-mode="dark" style={disabled ? { pointerEvents: "none", opacity: 0.6 } : undefined}>
       <MDEditor
         value={value}
         onChange={(val) => onChange(val ?? "")}
         height={height}
         preview="live"
         style={{ background: "transparent" }}
-        readOnly={disabled}
       />
     </div>
   );
