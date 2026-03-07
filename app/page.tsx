@@ -155,7 +155,6 @@ export default function HomePage() {
           <svg
             viewBox="0 0 1000 220"
             width="100%"
-            height="auto"
             preserveAspectRatio="xMidYMid meet"
             style={{ display: "block" }}
             aria-label="arko"

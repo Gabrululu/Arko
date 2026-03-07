@@ -30,17 +30,12 @@ export function Navbar() {
     console.log('Available connectors:', connectors);
     console.log('Has window.ethereum:', hasWallet);
     
-    // Intentar conectar con MetaMask primero, luego con injected
-    const metaMaskConnector = connectors.find(c => c.id === 'metaMask');
+    // Solo usar injected connector
     const injectedConnector = connectors.find(c => c.id === 'injected');
     
-    console.log('MetaMask connector:', metaMaskConnector);
     console.log('Injected connector:', injectedConnector);
     
-    if (metaMaskConnector) {
-      console.log('Connecting with MetaMask');
-      connect({ connector: metaMaskConnector });
-    } else if (injectedConnector) {
+    if (injectedConnector) {
       console.log('Connecting with injected');
       connect({ connector: injectedConnector });
     } else if (connectors.length > 0) {

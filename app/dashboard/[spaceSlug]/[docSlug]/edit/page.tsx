@@ -37,9 +37,24 @@ export default function EditPage() {
   const [nextVersion, setNextVersion] = useState<number>(1);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   // Use the hook for permissions
   const { allowed: canEdit, loading: permissionsLoading } = useCanEdit(space?.entityKey || "", space?.owner || "");
+
+  // Debug info
+  console.log("Edit page debug:", {
+    spaceSlug,
+    docSlug,
+    address,
+    space: space ? {
+      entityKey: space.entityKey,
+      owner: space.owner,
+      name: space.name
+    } : null,
+    canEdit,
+    permissionsLoading
+  });
 
   // ── Form state ────────────────────────────────────────────────────────
   const [title, setTitle] = useState("");
@@ -61,6 +76,13 @@ export default function EditPage() {
         if (!s) { setLoadError(`Space "${spaceSlug}" not found.`); return; }
         setSpace(s);
 
+        console.log("Space loaded:", {
+          spaceSlug,
+          space: s,
+          userAddress: address,
+          ownerMatch: address?.toLowerCase() === s.owner.toLowerCase()
+        });
+
         const nv = isNew ? 1 : await getNextVersion(s.entityKey, docSlug);
         setNextVersion(nv);
 
@@ -81,6 +103,11 @@ export default function EditPage() {
     }
     load();
   }, [address, spaceSlug, docSlug, isNew]);
+
+  // ── Mount effect ──────────────────────────────────────────────────────
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // ── Auto-generate slug from title (new docs only) ─────────────────────
   function handleTitleChange(val: string) {
@@ -142,6 +169,19 @@ export default function EditPage() {
   }
 
   // ── Guards ────────────────────────────────────────────────────────────
+
+  if (!mounted) {
+    return (
+      <div className="space-y-5 animate-pulse max-w-4xl mx-auto px-6 py-10">
+        <div className="h-4 w-48 bg-[#ede8dc] rounded" />
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="h-10 bg-[#ede8dc] rounded-lg" />
+          <div className="h-10 bg-[#ede8dc] rounded-lg" />
+        </div>
+        <div className="h-[520px] bg-[#ede8dc] rounded-xl" />
+      </div>
+    );
+  }
 
   if (!isConnected) {
     return (

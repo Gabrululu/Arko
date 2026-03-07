@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAccount, useWalletClient, useChainId, useSwitchChain } from "wagmi";
+import { useAccount, useWalletClient, useChainId, useSwitchChain, useBalance, useDisconnect } from "wagmi";
 import { useRouter } from "next/navigation";
 import { createSigningClient } from "@/lib/arkiv/client";
 import { createSpace } from "@/lib/arkiv/spaces";
@@ -14,6 +14,11 @@ export function CreateSpaceButton() {
   const { data: walletClient } = useWalletClient();
   const chainId = useChainId();
   const { switchChain } = useSwitchChain();
+  const { disconnect } = useDisconnect();
+  const { data: balance } = useBalance({
+    address: address,
+    chainId: KAOLIN_CHAIN_ID,
+  });
   const router = useRouter();
 
   const [mounted, setMounted] = useState(false);
@@ -41,9 +46,53 @@ export function CreateSpaceButton() {
       return;
     }
 
-    // Mejor chequeo de conexión
-    if (!isConnected || !walletClient || !address) {
+    if (!isConnected || !address) {
       setError("Please connect your wallet first.");
+      return;
+    }
+
+    // Obtener walletClient si no está disponible
+    const clientToUse = walletClient;
+    if (!clientToUse) {
+      // Mostrar mensaje con opción de reconectar
+      setError("wallet_reconnect");
+      return;
+    }
+
+    // Verificar que esté en la red correcta
+    if (chainId !== KAOLIN_CHAIN_ID) {
+      // Intentar cambiar automáticamente a Kaolin
+      if (switchChain) {
+        try {
+          await switchChain({ chainId: KAOLIN_CHAIN_ID });
+          // Esperar un poco para que se complete el cambio
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          // Verificar de nuevo
+          if (chainId !== KAOLIN_CHAIN_ID) {
+            setError(`Please switch to Kaolin testnet (current: ${chainId}, required: ${KAOLIN_CHAIN_ID})`);
+            return;
+          }
+        } catch {
+          setError(`Failed to switch to Kaolin testnet. Please switch manually.`);
+          return;
+        }
+      } else {
+        setError(`Please switch to Kaolin testnet (current: ${chainId}, required: ${KAOLIN_CHAIN_ID})`);
+        return;
+      }
+    }
+
+    // Verificar balance mínimo para gas
+    if (!balance || balance.value === BigInt(0)) {
+      setError("No Kaolin ETH balance found. Please get testnet ETH from a faucet first.");
+      return;
+    }
+
+    // Verificar que tenga al menos 0.001 ETH para gas
+    const minBalance = BigInt("1000000000000000"); // 0.001 ETH in wei
+    if (balance.value < minBalance) {
+      const balanceInEth = Number(balance.value) / 1e18;
+      setError(`Insufficient Kaolin ETH. You have ${balanceInEth.toFixed(6)} ETH, need at least 0.001 ETH for gas.`);
       return;
     }
 
@@ -51,8 +100,10 @@ export function CreateSpaceButton() {
     setError(null);
 
     try {      
+      console.log("Creating space with:", { address, chainId, form });
+      
       // 1. IMPORTANTE: Ahora usamos 'await' porque el cliente valida la red asíncronamente
-      const arkivClient = await createSigningClient(walletClient);
+      const arkivClient = await createSigningClient(clientToUse);
       
       // 2. Creación de la entidad en Kaolin
       await createSpace(arkivClient, { ...form, owner: address });
@@ -65,13 +116,20 @@ export function CreateSpaceButton() {
       router.refresh();
     } catch (err: unknown) {
       console.error("Space creation error:", err);
-      const msg = err instanceof Error ? err.message.toLowerCase() : "";
-      if (msg.includes("rejected")) {
+      const error = err as { message?: string; code?: number } | undefined;
+      const msg = error?.message?.toLowerCase() || "";
+      const code = error?.code;
+      
+      if (msg.includes("rejected") || code === 4001) {
         setError("Transaction rejected in wallet.");
-      } else if (msg.includes("network")) {
-        setError("Network mismatch. Please switch to Kaolin.");
+      } else if (msg.includes("network") || msg.includes("chain")) {
+        setError("Network mismatch. Please switch to Kaolin testnet.");
+      } else if (msg.includes("insufficient") || msg.includes("balance") || msg.includes("gas")) {
+        setError("Insufficient Kaolin ETH for gas fees. Please get testnet ETH from a faucet.");
+      } else if (msg.includes("nonce") || msg.includes("replacement")) {
+        setError("Transaction conflict. Please try again in a few seconds.");
       } else {
-        setError("On-chain error. Make sure you have Kaolin ETH for gas.");
+        setError(`Transaction failed: ${error?.message || "Unknown error"}. Make sure you have Kaolin ETH for gas.`);
       }
     } finally {
       setLoading(false);
@@ -90,14 +148,14 @@ export function CreateSpaceButton() {
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-20 p-4">
           {/* Backdrop - bloqueado si está firmando */}
           <div 
             className="absolute inset-0 bg-[#1a1508]/70 backdrop-blur-sm" 
             onClick={() => !loading && setOpen(false)} 
           />
           
-          <div className="relative w-full max-w-md bg-[#f5f1e8] border border-[#d4c9b0] rounded-2xl p-6 shadow-2xl space-y-6 overflow-hidden flex flex-col items-center justify-center">
+          <div className="relative w-full max-w-md bg-[#f5f1e8] border border-[#d4c9b0] rounded-2xl p-6 shadow-2xl space-y-6 overflow-hidden flex flex-col items-center justify-center mt-8">
             {/* Indicador de proceso de firma */}
             {loading && (
               <div className="absolute inset-0 bg-[#f5f1e8]/40 backdrop-blur-[1px] z-10 flex flex-col items-center justify-center">
@@ -109,6 +167,17 @@ export function CreateSpaceButton() {
             <div className="w-full text-center">
               <h2 className="text-xl font-serif text-[#615050] italic">Sovereign Space</h2>
               <p className="text-[#776a6a] text-xs">This will create a permanent entity on-chain.</p>
+              
+              {/* Balance de Kaolin ETH */}
+              {balance && (
+                <div className="mt-3 p-3 bg-[#ede8dc] rounded-lg">
+                  <p className="text-[10px] uppercase tracking-widest font-bold text-[#ad9a6f] mb-1">Kaolin ETH Balance</p>
+                  <p className="text-sm font-mono text-[#615050]">{(Number(balance.value) / 1e18).toFixed(6)} ETH</p>
+                  {balance.value < BigInt("1000000000000000") && (
+                    <p className="text-[9px] text-amber-600 mt-1">⚠️ Need at least 0.001 ETH for gas</p>
+                  )}
+                </div>
+              )}
             </div>
             
             <form onSubmit={handleSubmit} className="space-y-4 w-full">
@@ -152,7 +221,25 @@ export function CreateSpaceButton() {
 
               {error && (
                 <div className="p-3 bg-red-50 border border-red-100 rounded-lg text-center">
-                  <p className="text-red-600 text-[11px] font-mono leading-tight">{error}</p>
+                  {error === "wallet_reconnect" ? (
+                    <div className="space-y-2">
+                      <p className="text-red-600 text-[11px] font-mono leading-tight">
+                        Wallet connection needs refresh. Please reconnect:
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          disconnect();
+                          setError(null);
+                        }}
+                        className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-[10px] uppercase tracking-widest font-bold rounded"
+                      >
+                        Reconnect Wallet
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-red-600 text-[11px] font-mono leading-tight">{error}</p>
+                  )}
                 </div>
               )}
 

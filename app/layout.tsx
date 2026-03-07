@@ -51,7 +51,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </main>
 
             {/* ── Footer ── */}
-            <footer className="border-t border-[#d4c9b0]/30 bg-[#fcfcfc] mt-auto">
+            <footer className="border-t border-[#d4c9b0]/30 bg-[#fcfcfc] mt-auto" suppressHydrationWarning>
               <div className="max-w-7xl mx-auto px-6 py-12">
                 <div className="grid sm:grid-cols-2 gap-12 mb-10">
                   <div className="space-y-4">
@@ -65,8 +65,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <div className="flex flex-wrap gap-x-8 gap-y-4 sm:justify-end items-start">
                     <div className="flex flex-col gap-2">
                       <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#ad9a6f] mb-2">Platform</p>
-                      <Link href="/" className="text-sm text-[#776a6a] hover:text-[#615050] transition-colors">Explore</Link>
-                      <Link href="/dashboard" className="text-sm text-[#776a6a] hover:text-[#615050] transition-colors">Dashboard</Link>
+                      <Link href="/" className="text-sm text-[#776a6a] hover:text-[#615050] transition-colors" suppressHydrationWarning>Explore</Link>
+                      <Link href="/dashboard" className="text-sm text-[#776a6a] hover:text-[#615050] transition-colors" suppressHydrationWarning>Dashboard</Link>
                     </div>
                     <div className="flex flex-col gap-2">
                       <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#ad9a6f] mb-2">Network</p>
@@ -75,6 +75,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-sm text-[#776a6a] hover:text-[#615050] transition-colors"
+                        suppressHydrationWarning
                       >
                         Kaolin Explorer
                       </a>
@@ -83,6 +84,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-sm text-[#776a6a] hover:text-[#615050] transition-colors"
+                        suppressHydrationWarning
                       >
                         Arkiv Network
                       </a>

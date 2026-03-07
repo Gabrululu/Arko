@@ -7,15 +7,13 @@
  */
 
 import { createConfig, http } from "wagmi";
-import { injected, metaMask } from "wagmi/connectors";
+import { injected } from "wagmi/connectors";
 import { kaolin } from "@arkiv-network/sdk/chains";
 
 export const wagmiConfig = createConfig({
   chains: [kaolin],
   connectors: [
-    // MetaMask connector (recomendado)
-    metaMask(),
-    // Generic injected connector (fallback para otras wallets)
+    // Solo usar injected para evitar problemas con MetaMask SDK
     injected(),
   ],
   transports: {
