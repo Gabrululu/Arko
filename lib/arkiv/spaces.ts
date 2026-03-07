@@ -127,7 +127,7 @@ export async function renewSpace(
   const { entityKey } = await walletClient.createEntity({
     payload: jsonToPayload(payload),
     contentType: "application/json",
-    attributes: entity.attributes || [],
+    attributes: (entity.attributes || []).map((a) => ({ key: a.key, value: String(a.value) })),
     expiresIn: ExpirationTime.fromDays(365),
   });
 
