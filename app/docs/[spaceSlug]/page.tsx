@@ -7,7 +7,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { getSpaceBySlug, type Space } from "@/lib/arkiv/spaces";
 import { listDocsInSpace, type Doc } from "@/lib/arkiv/docs";
@@ -18,6 +18,7 @@ function truncate(addr: string) {
 
 export default function SpacePage() {
   const params = useParams();
+  const router = useRouter();
   const spaceSlug = params.spaceSlug as string;
 
   const [space, setSpace] = useState<Space | null>(null);
@@ -47,6 +48,18 @@ export default function SpacePage() {
     }
     load();
   }, [spaceSlug]);
+
+  // Keyboard shortcut for search
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault()
+        router.push(`/docs/${spaceSlug}/search`)
+      }
+    }
+    window.addEventListener("keydown", handleKey)
+    return () => window.removeEventListener("keydown", handleKey)
+  }, [spaceSlug, router]);
 
   const filteredDocs = docs.filter(doc =>
     doc.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -112,13 +125,41 @@ export default function SpacePage() {
 
       {/* ── Search ── */}
       <div className="space-y-4">
-        <input
-          type="text"
-          placeholder="Search documents..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-4 py-3 bg-[#ede8dc] border border-[#c4b89a] rounded-lg text-[#615050] placeholder-[#ad9a6f]/60 focus:outline-none focus:border-[#ad9a6f] transition-colors"
-        />
+        <div className="flex gap-4">
+          <input
+            type="text"
+            placeholder="Search documents..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1 px-4 py-3 bg-[#ede8dc] border border-[#c4b89a] rounded-lg text-[#615050] placeholder-[#ad9a6f]/60 focus:outline-none focus:border-[#ad9a6f] transition-colors"
+          />
+          <Link
+            href={`/docs/${spaceSlug}/search`}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "8px 16px",
+              border: "1px solid rgba(255,252,246,0.15)",
+              borderRadius: "6px",
+              color: "rgba(255,252,246,0.5)",
+              fontSize: "0.85rem",
+              textDecoration: "none",
+              fontFamily: "monospace",
+            }}
+          >
+            <span>⌕</span>
+            <span>Search docs</span>
+            <kbd style={{
+              marginLeft: "auto",
+              fontSize: "0.65rem",
+              padding: "1px 5px",
+              border: "1px solid rgba(255,252,246,0.2)",
+              borderRadius: "3px",
+              color: "rgba(255,252,246,0.3)",
+            }}>⌘K</kbd>
+          </Link>
+        </div>
       </div>
 
       {/* ── Documents ── */}

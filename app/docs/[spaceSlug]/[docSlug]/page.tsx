@@ -9,6 +9,8 @@ import { getLatestDoc, getDocAtBlock, type Doc } from "@/lib/arkiv/docs";
 import { canEditSpace } from "@/lib/arkiv/collaborators";
 import { DocViewer } from "@/components/DocViewer";
 import { SnapshotBanner } from "@/components/SnapshotBanner";
+import { ShareSnapshotButton } from "@/components/ShareSnapshotButton";
+import { TableOfContents } from "@/components/TableOfContents";
 
 function truncate(addr: string) {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
@@ -123,87 +125,110 @@ export default function DocPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8 px-6 py-12">
-      {atBlock !== null && (
-        <SnapshotBanner
-          atBlock={atBlock}
-          spaceSlug={spaceSlug}
-          docSlug={docSlug}
-          docBlockNumber={doc.blockNumber}
-        />
-      )}
+    <div style={{
+      display: "grid",
+      gridTemplateColumns: "1fr min(65ch, 100%) 240px",
+      gap: "2rem",
+      alignItems: "start",
+      maxWidth: "1200px",
+      margin: "0 auto",
+      padding: "0 2rem",
+    }}>
+      <div /> {/* left spacer */}
 
-      <header className="space-y-6">
-        <div className="flex items-center justify-between border-b border-[#d4c9b0] pb-4">
-          <nav className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-[#ad9a6f]">
+      <div> {/* main content */}
+        <div className="space-y-8 py-12">
+          {atBlock !== null && (
+            <SnapshotBanner
+              atBlock={atBlock}
+              spaceSlug={spaceSlug}
+              docSlug={docSlug}
+              docBlockNumber={doc.blockNumber}
+            />
+          )}
+
+          <header className="space-y-6">
+            <div className="flex items-center justify-between border-b border-[#d4c9b0] pb-4">
+              <nav className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-[#ad9a6f]">
+                <Link href={`/docs/${spaceSlug}`} className="hover:text-[#615050] transition-colors">
+                  {space.name}
+                </Link>
+                <span className="opacity-40">/</span>
+                <span className="text-[#615050]">{doc.title}</span>
+              </nav>
+
+              <div className="flex items-center gap-4">
+                <Link
+                  href={`/docs/${spaceSlug}/${docSlug}/history`}
+                  className="text-[10px] uppercase tracking-widest font-bold text-[#776a6a] hover:text-[#ad9a6f] transition-colors underline underline-offset-4 decoration-[#d4c9b0]"
+                >
+                  History
+                </Link>
+                <Link
+                  href={`/dashboard/${spaceSlug}/${docSlug}/edit`}
+                  className="px-3 py-1 text-[10px] uppercase font-bold bg-[#1a1508] text-[#F5F0E8] rounded hover:opacity-80 transition-opacity"
+                >
+                  Edit
+                </Link>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h1 className="text-4xl font-serif text-[#615050] leading-tight italic">
+                {doc.title}
+              </h1>
+
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] font-mono text-[#ad9a6f]">
+                <span className="bg-[#f5f1e8] px-1.5 py-0.5 rounded border border-[#d4c9b0]">v{doc.version}</span>
+                <span>·</span>
+                <Link
+                  href={`/docs/${spaceSlug}/${docSlug}?atBlock=${doc.blockNumber}`}
+                  className="hover:underline hover:text-[#615050] transition-all"
+                  title="View snapshot at this specific block"
+                >
+                  Block #{doc.blockNumber.toLocaleString()}
+                </Link>
+                <span>·</span>
+                <span className="cursor-help" title={doc.author}>Author: {truncate(doc.author)}</span>
+                {atBlock === null && (
+                  <>
+                    <span>·</span>
+                    <span className="flex items-center gap-1.5 text-emerald-600 font-bold uppercase tracking-tighter">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Latest
+                    </span>
+                  </>
+                )}
+                <ShareSnapshotButton
+                  spaceSlug={spaceSlug}
+                  docSlug={docSlug}
+                  blockNumber={doc.blockNumber}
+                  version={doc.version}
+                  isSnapshot={atBlock !== null}
+                />
+              </div>
+            </div>
+          </header>
+
+          <article className="prose prose-stone max-w-none">
+            <DocViewer content={doc.content} />
+          </article>
+
+          <footer className="pt-12 border-t border-[#d4c9b0] flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] uppercase tracking-widest font-bold text-[#ad9a6f]">
             <Link href={`/docs/${spaceSlug}`} className="hover:text-[#615050] transition-colors">
-              {space.name}
+              ← Back to {space.name}
             </Link>
-            <span className="opacity-40">/</span>
-            <span className="text-[#615050]">{doc.title}</span>
-          </nav>
-
-          <div className="flex items-center gap-4">
             <Link
               href={`/docs/${spaceSlug}/${docSlug}/history`}
-              className="text-[10px] uppercase tracking-widest font-bold text-[#776a6a] hover:text-[#ad9a6f] transition-colors underline underline-offset-4 decoration-[#d4c9b0]"
+              className="hover:text-[#615050] transition-colors"
             >
-              History
+              Provenance: {doc.version} Immutable versions on-chain →
             </Link>
-            <Link
-              href={`/dashboard/${spaceSlug}/${docSlug}/edit`}
-              className="px-3 py-1 text-[10px] uppercase font-bold bg-[#1a1508] text-[#F5F0E8] rounded hover:opacity-80 transition-opacity"
-            >
-              Edit
-            </Link>
-          </div>
+          </footer>
         </div>
+      </div>
 
-        <div className="space-y-2">
-          <h1 className="text-4xl font-serif text-[#615050] leading-tight italic">
-            {doc.title}
-          </h1>
-
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] font-mono text-[#ad9a6f]">
-            <span className="bg-[#f5f1e8] px-1.5 py-0.5 rounded border border-[#d4c9b0]">v{doc.version}</span>
-            <span>·</span>
-            <Link
-              href={`/docs/${spaceSlug}/${docSlug}?atBlock=${doc.blockNumber}`}
-              className="hover:underline hover:text-[#615050] transition-all"
-              title="View snapshot at this specific block"
-            >
-              Block #{doc.blockNumber.toLocaleString()}
-            </Link>
-            <span>·</span>
-            <span className="cursor-help" title={doc.author}>Author: {truncate(doc.author)}</span>
-            {atBlock === null && (
-              <>
-                <span>·</span>
-                <span className="flex items-center gap-1.5 text-emerald-600 font-bold uppercase tracking-tighter">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Latest
-                </span>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
-
-      <article className="prose prose-stone max-w-none">
-        <DocViewer content={doc.content} />
-      </article>
-
-      <footer className="pt-12 border-t border-[#d4c9b0] flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] uppercase tracking-widest font-bold text-[#ad9a6f]">
-        <Link href={`/docs/${spaceSlug}`} className="hover:text-[#615050] transition-colors">
-          ← Back to {space.name}
-        </Link>
-        <Link
-          href={`/docs/${spaceSlug}/${docSlug}/history`}
-          className="hover:text-[#615050] transition-colors"
-        >
-          Provenance: {doc.version} Immutable versions on-chain →
-        </Link>
-      </footer>
+      <TableOfContents content={doc.content} />
     </div>
   );
 }

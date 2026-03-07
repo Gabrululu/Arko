@@ -76,3 +76,54 @@
            focus:outline-none focus:border-[#ad9a6f] transition-all placeholder-[#ad9a6f]/50;
   }
 }
+
+/* ─── rehype-pretty-code Styles ─── */
+
+/* Code block container */
+[data-rehype-pretty-code-figure] {
+  margin: 1.5rem 0;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 252, 246, 0.1);
+}
+
+/* Code block title bar (filename) */
+[data-rehype-pretty-code-title] {
+  background: rgba(255, 252, 246, 0.06);
+  color: rgba(255, 252, 246, 0.5);
+  font-family: monospace;
+  font-size: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid rgba(255, 252, 246, 0.08);
+}
+
+/* Code block itself */
+[data-rehype-pretty-code-figure] pre {
+  background: rgba(255, 252, 246, 0.04) !important;
+  padding: 1.25rem;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+/* Inline code */
+:not(pre) > code {
+  background: rgba(255, 252, 246, 0.08);
+  color: #fffcf6;
+  padding: 0.15em 0.4em;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.875em;
+}
+
+/* Line highlighting */
+[data-highlighted-line] {
+  background: rgba(255, 252, 246, 0.06);
+  border-left: 2px solid rgba(255, 252, 246, 0.4);
+  padding-left: calc(1rem - 2px);
+}
+
+/* Table of Contents - Hide on mobile */
+@media (max-width: 768px) {
+  .toc-sidebar { display: none; }
+}

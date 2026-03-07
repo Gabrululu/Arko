@@ -3,7 +3,13 @@
  */
 
 import { MDXRemote } from "next-mdx-remote/rsc";
-import rehypeHighlight from "rehype-highlight";
+import rehypePrettyCode from "rehype-pretty-code";
+import rehypeSlug from "rehype-slug";
+
+const options = {
+  theme: "vesper",        // dark theme that matches Arko's #1f1303 palette
+  keepBackground: false,  // we control background via CSS
+};
 
 interface DocViewerProps {
   content: string;
@@ -11,19 +17,19 @@ interface DocViewerProps {
 
 export async function DocViewer({ content }: DocViewerProps) {
   return (
-    <article className="prose max-w-none 
-      prose-headings:font-serif prose-headings:italic prose-headings:text-[#615050] 
+    <article className="prose max-w-none
+      prose-headings:font-serif prose-headings:italic prose-headings:text-[#615050]
       prose-p:text-[#776a6a] prose-p:leading-relaxed
       prose-a:text-[#ad9a6f] prose-a:underline-offset-4 hover:prose-a:text-[#615050]
       prose-code:text-[#ad9a6f] prose-code:bg-[#f5f1e8] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
       prose-pre:bg-[#1a1508] prose-pre:border prose-pre:border-[#2a2318] prose-pre:rounded-xl
       prose-strong:text-[#615050]">
-      
-      <MDXRemote 
-        source={content} 
+
+      <MDXRemote
+        source={content}
         options={{
-          mdxOptions: {            
-            rehypePlugins: [rehypeHighlight],
+          mdxOptions: {
+            rehypePlugins: [[rehypePrettyCode, options], rehypeSlug],
           }
         }}
       />
