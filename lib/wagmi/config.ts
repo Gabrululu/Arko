@@ -7,14 +7,15 @@
  */
 
 import { createConfig, http } from "wagmi";
-import { injected } from "wagmi/connectors";
+import { injected, metaMask } from "wagmi/connectors";
 import { kaolin } from "@arkiv-network/sdk/chains";
 
 export const wagmiConfig = createConfig({
   chains: [kaolin],
   connectors: [
-    // Use the generic injected connector which supports MetaMask, Rabby,
-    // Coinbase Wallet, and any EIP-1193 compatible wallet.
+    // MetaMask connector (recomendado)
+    metaMask(),
+    // Generic injected connector (fallback para otras wallets)
     injected(),
   ],
   transports: {

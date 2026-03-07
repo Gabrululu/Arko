@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAccount, useChainId, useSwitchChain, useDisconnect } from "wagmi";
+import { useAccount, useChainId, useSwitchChain, useDisconnect, useConnect } from "wagmi";
 import Link from "next/link";
 import { CreateSpaceButton } from "../app/CreateSpaceButton";
 import { ChevronDown, Wallet, LogOut, ExternalLink } from "lucide-react";
@@ -14,6 +14,7 @@ export function Navbar() {
   const chainId = useChainId();
   const { switchChain } = useSwitchChain();
   const { disconnect } = useDisconnect();
+  const { connect, connectors, isPending, error } = useConnect();
   
   const [mounted, setMounted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -23,13 +24,41 @@ export function Navbar() {
     setMounted(true);
   }, []);
 
+  const handleConnect = () => {
+    console.log('Available connectors:', connectors);
+    console.log('Has window.ethereum:', hasWallet);
+    
+    // Intentar conectar con MetaMask primero, luego con injected
+    const metaMaskConnector = connectors.find(c => c.id === 'metaMask');
+    const injectedConnector = connectors.find(c => c.id === 'injected');
+    
+    console.log('MetaMask connector:', metaMaskConnector);
+    console.log('Injected connector:', injectedConnector);
+    
+    if (metaMaskConnector) {
+      console.log('Connecting with MetaMask');
+      connect({ connector: metaMaskConnector });
+    } else if (injectedConnector) {
+      console.log('Connecting with injected');
+      connect({ connector: injectedConnector });
+    } else if (connectors.length > 0) {
+      console.log('Connecting with first available connector');
+      connect({ connector: connectors[0] });
+    } else {
+      console.log('No connectors available');
+    }
+  };
+
   if (!mounted) {
     return (
       <nav className="h-16 border-b border-[#d4c9b0]/30 bg-[#fcfcfc] w-full" />
     );
   }
 
-  const isWrongNetwork = isConnected && chainId !== KAOLIN_ID;
+  const hasWallet = mounted && typeof window !== 'undefined' && 
+    (window.ethereum || window.phantom || window.solana || 
+     (window as any).web3 || (window as any).BitKeep || (window as any).okxwallet);
+  const hasConnectors = connectors.length > 0;
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-[#d4c9b0]/30 bg-[#fcfcfc]/80 backdrop-blur-md">
@@ -106,12 +135,26 @@ export function Navbar() {
               </div>
             </div>
           ) : (
-            <button 
-              className="btn-primary flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] font-bold"
-              // Aquí podrías disparar el modal de conexión de Wagmi/RainbowKit
-            >
-              <Wallet size={14} /> Connect Wallet
-            </button>
+            <div className="flex flex-col items-end gap-2">
+              {error && (
+                <div className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
+                  {error.message}
+                </div>
+              )}
+              {!hasWallet && (
+                <div className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
+                  Install MetaMask, Coinbase Wallet, or another Web3 wallet to connect
+                </div>
+              )}
+              <button 
+                onClick={handleConnect}
+                disabled={isPending || !hasConnectors}
+                className="btn-primary flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] font-bold disabled:opacity-50"
+              >
+                <Wallet size={14} /> 
+                {isPending ? "Connecting..." : "Connect Wallet"}
+              </button>
+            </div>
           )}
         </div>
       </div>
