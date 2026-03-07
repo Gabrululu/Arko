@@ -7,14 +7,6 @@ export const revalidate = 30;
 
 // ─── Styles & Constants ──────────────────────────────────────────────────────
 
-const STRIPE_TEXT_STYLE: React.CSSProperties = {
-  background: "repeating-linear-gradient(to bottom, #F5F0E8 0px, #F5F0E8 6px, #1a1508 6px, #1a1508 12px)",
-  WebkitBackgroundClip: "text",
-  backgroundClip: "text",
-  WebkitTextFillColor: "transparent",
-  color: "transparent",
-};
-
 const WHY_ARKO_ITEMS = [
   {
     num: "01",
@@ -96,7 +88,7 @@ async function SpacesGrid() {
           key={space.entityKey}
           href={`/docs/${space.slug}`}
           className="group flex flex-col p-5 bg-[#221a0e] border border-[#2a2318] rounded-xl hover:border-[#3a3220] transition-all"
-          suppressHydrationWarning // Previene errores por extensiones inyectando clases
+          suppressHydrationWarning 
         >
           <div className="flex items-start justify-between gap-2 mb-2">
             <h3 className="font-serif font-normal text-[#F5F0E8] group-hover:text-[#ad9a6f] transition-colors leading-snug">
@@ -156,53 +148,123 @@ export default function HomePage() {
     <div className="w-full">
       
       {/* SECTION 1: HERO */}
-      <section className="min-h-screen bg-[#1a1508] flex flex-col relative overflow-hidden">
-        <div className="flex-1 flex items-center max-w-6xl mx-auto px-6 w-full pt-16 pb-4">
-          <h1
-            className="font-serif leading-[0.85] select-none tracking-tight"
-            style={{
-              fontSize: "clamp(72px, 22vw, 400px)",
-              fontWeight: 900,
-              ...STRIPE_TEXT_STYLE,
-            }}
+      <section className="min-h-screen relative" style={{ backgroundColor: "#1f1303" }}>
+
+        {/* SVG Wordmark — fills full viewport width, no clipping possible */}
+        <div className="w-full select-none" style={{ lineHeight: 0, paddingTop: "clamp(4rem, 10vh, 9rem)" }}>
+          <svg
+            viewBox="0 0 1000 220"
+            width="100%"
+            height="auto"
+            preserveAspectRatio="xMidYMid meet"
+            style={{ display: "block" }}
+            aria-label="arko"
           >
-            arko
-          </h1>
+            <defs>
+              <pattern
+                id="blind-stripes"
+                patternUnits="userSpaceOnUse"
+                width="1000"
+                height="16"
+              >
+                <rect width="1000" height="8" fill="#fffcf6" />
+                <rect y="8" width="1000" height="8" fill="#1f1303" />
+              </pattern>
+              <clipPath id="arko-clip">
+                <text
+                  x="0"
+                  y="200"
+                  style={{
+                    fontFamily: "'Arial Black', 'Helvetica Neue', Impact, sans-serif",
+                    fontWeight: 900,
+                    fontSize: "220px",
+                    letterSpacing: "-8px",
+                  }}
+                >
+                  arko
+                </text>
+              </clipPath>
+            </defs>
+            <rect
+              width="1000"
+              height="220"
+              fill="url(#blind-stripes)"
+              clipPath="url(#arko-clip)"
+            />
+          </svg>
         </div>
 
-        <div className="max-w-6xl mx-auto px-6 pb-16 md:pb-24 w-full">
-          <p className="font-serif font-normal leading-tight text-[#F5F0E8] text-[clamp(22px,3.5vw,52px)]">
-            Sovereign Docs.
-          </p>
-          <p className="font-serif font-normal leading-tight text-[#F5F0E8] mb-10 text-[clamp(22px,3.5vw,52px)]">
+        {/* Tagline + CTAs — bottom-left */}
+        <div
+          className="absolute"
+          style={{
+            bottom: "3rem",
+            left: "clamp(1.5rem, 4vw, 4rem)",
+            maxWidth: "min(44ch, 50vw)",
+          }}
+        >
+          <h2
+            className="not-italic font-sans font-light leading-tight"
+            style={{
+              color: "#fffcf6",
+              fontSize: "clamp(1.6rem, 3.5vw, 3rem)",
+              letterSpacing: "-0.01em",
+            }}
+          >
+            Sovereign Docs.<br />
             Immutable History.
-          </p>
-
-          <div className="flex flex-wrap items-center gap-4 mb-8">
+          </h2>
+          <div className="flex flex-wrap items-center gap-3 mt-6">
             <Link
               href="/dashboard"
-              className="bg-[#F5F0E8] text-[#1a1508] px-8 py-4 text-sm tracking-widest uppercase hover:opacity-90 transition-opacity"
-              suppressHydrationWarning 
+              style={{ backgroundColor: "#fffcf6", color: "#1f1303" }}
+              className="px-7 py-3 text-xs tracking-widest uppercase font-bold hover:opacity-90 transition-opacity"
+              suppressHydrationWarning
             >
               Start writing
             </Link>
             <a
               href="#public-spaces"
-              className="border border-[#F5F0E8]/30 text-[#F5F0E8] px-8 py-4 text-sm tracking-widest uppercase hover:border-[#F5F0E8]/60 transition-colors"
+              style={{ borderColor: "rgba(255,252,246,0.3)", color: "#fffcf6" }}
+              className="border px-7 py-3 text-xs tracking-widest uppercase hover:border-[#fffcf6]/60 transition-colors"
               suppressHydrationWarning
             >
-              Browse public spaces
+              Browse spaces
             </a>
-          </div>
-
-          <div className="flex items-center gap-2 text-xs font-mono text-[#ad9a6f] tracking-widest">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#ad9a6f] animate-pulse" />
-            Kaolin testnet · @arkiv-network/sdk v0.6
           </div>
         </div>
 
+        {/* Network info — bottom-right */}
+        <div
+          className="absolute flex items-center gap-3"
+          style={{ bottom: "3rem", right: "clamp(1.5rem, 4vw, 4rem)" }}
+        >
+          <div
+            style={{
+              width: "2.4rem",
+              height: "2.4rem",
+              borderRadius: "50%",
+              backgroundColor: "rgba(255,252,246,0.08)",
+              border: "1px solid rgba(255,252,246,0.2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <span style={{ color: "#fffcf6", fontSize: "0.7rem" }}>↗</span>
+          </div>
+          <p
+            className="font-mono text-[0.7rem] leading-snug"
+            style={{ color: "rgba(255,252,246,0.55)", maxWidth: "16ch" }}
+          >
+            Built on Arkiv · Kaolin testnet · Open source
+          </p>
+        </div>
+
+        {/* Scroll indicator */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2">
-          <span className="text-xs text-[#F5F0E8]/25 tracking-[0.3em] animate-bounce">↓</span>
+          <span className="text-xs tracking-[0.3em] animate-bounce" style={{ color: "rgba(255,252,246,0.2)" }}>↓</span>
         </div>
       </section>
 

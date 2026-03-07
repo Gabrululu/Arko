@@ -10,6 +10,10 @@
     --accent-warm: #d4c9b0;
     --bg-warm: #f5f1e8;
     --bg-code: #ede8dc;
+    /* Hero palette */
+    --clr-bg: #1f1303;
+    --clr-fg: #fffcf6;
+    --grid-margin: clamp(1.5rem, 4vw, 4rem);
   }
 
   * {
@@ -18,10 +22,11 @@
 
   body {
     background: var(--background);
-    color: var(--foreground);    
+    color: var(--foreground);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    overflow-x: clip;
     @apply font-sans;
   }
  

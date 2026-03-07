@@ -1,83 +1,62 @@
-"use client";
+"use client"
 
-import React, { useEffect, useRef, useState, useLayoutEffect, useMemo } from "react";
-import { gsap } from "gsap";
-
-const BAR_COUNT = 22;
-const BAR_HEIGHT = `${(100 / BAR_COUNT + 0.15).toFixed(4)}vh`;
+import { useEffect, useRef } from "react"
 
 export function ShutterReveal({ children }: { children: React.ReactNode }) {
-  const overlayRef = useRef<HTMLDivElement>(null);
-  const [shouldRender, setShouldRender] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
- 
-  useLayoutEffect(() => {
-    const hasPlayed = sessionStorage.getItem("arko-shutter");
-    if (!hasPlayed) {
-      setShouldRender(true);
-      setIsVisible(true);
-    }
-  }, []);
+  const curtainRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!isVisible || !overlayRef.current) return;
+    const curtain = curtainRef.current
+    if (!curtain) return
 
-    const bars = overlayRef.current.querySelectorAll(".shutter-bar");
+    // Skip if already played this session
+    if (sessionStorage.getItem("arko-intro-done")) {
+      curtain.style.display = "none"
+      return
+    }
 
-    const ctx = gsap.context(() => {
-      gsap.to(bars, {
-        y: "-120vh",
-        duration: 0.88,
-        ease: "power3.in",
-        stagger: {
-          each: 0.038,
-          from: "start",
-        },
-        delay: 0.18,
-        onComplete: () => {
-          sessionStorage.setItem("arko-shutter", "1");
-          setIsVisible(false);
-          setShouldRender(false);
-        },
-      });
-    }, overlayRef);
+    // Start: curtain covers full screen
+    curtain.style.transform = "translateY(0%)"
+    curtain.style.visibility = "visible"
 
-    return () => ctx.revert(); 
-  }, [isVisible]);
+    // After brief pause, animate curtain upward
+    const t = setTimeout(() => {
+      curtain.style.transition = "transform 1.6s cubic-bezier(0.76, 0, 0.24, 1)"
+      curtain.style.transform = "translateY(-100%)"
 
- 
-  const renderBars = useMemo(() => {
-    return Array.from({ length: BAR_COUNT }).map((_, i) => (
-      <div
-        key={i}
-        className="shutter-bar w-full"
-        style={{ 
-          height: BAR_HEIGHT, 
-          backgroundColor: "#1a1508",
-          willChange: "transform" 
-        }}
-      />
-    ));
-  }, []);
+      // After animation ends, remove from DOM
+      const t2 = setTimeout(() => {
+        curtain.style.display = "none"
+        sessionStorage.setItem("arko-intro-done", "1")
+      }, 1700)
+
+      return () => clearTimeout(t2)
+    }, 300)
+
+    return () => clearTimeout(t)
+  }, [])
 
   return (
     <>
-      {shouldRender && (
-        <div
-          ref={overlayRef}
-          className="fixed inset-0 z-[200] pointer-events-none flex flex-col"
-          style={{ visibility: isVisible ? 'visible' : 'hidden' }}
-          aria-hidden="true"
-        >
-          {renderBars}
-        </div>
-      )}
-      {/* Si el error de 'keychainify-checked' persiste, el problema está 
-          en los componentes dentro de {children}. 
-      */}
-      <div suppressHydrationWarning>
-        {children}
-      </div>
+      {children}
+
+      {/* Single solid curtain panel — slides up on load */}
+      <div
+        ref={curtainRef}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          backgroundColor: "#1f1303",
+          zIndex: 99999,
+          visibility: "hidden",
+          transform: "translateY(0%)",
+          willChange: "transform",
+          pointerEvents: "none",
+        }}
+      />
     </>
-  );
+  )
 }
