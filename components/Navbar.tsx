@@ -24,6 +24,8 @@ export function Navbar() {
     setMounted(true);
   }, []);
 
+  const isWrongNetwork = chainId !== KAOLIN_ID;
+
   const handleConnect = () => {
     console.log('Available connectors:', connectors);
     console.log('Has window.ethereum:', hasWallet);
@@ -55,9 +57,11 @@ export function Navbar() {
     );
   }
 
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   const hasWallet = mounted && typeof window !== 'undefined' && 
-    (window.ethereum || window.phantom || window.solana || 
+    ((window as any).ethereum || (window as any).phantom || (window as any).solana || 
      (window as any).web3 || (window as any).BitKeep || (window as any).okxwallet);
+  /* eslint-enable @typescript-eslint/no-explicit-any */
   const hasConnectors = connectors.length > 0;
 
   return (
