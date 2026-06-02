@@ -26,13 +26,19 @@ interface SlashMenuProps {
 
 function SlashMenu({ query, position, onSelect, onClose }: SlashMenuProps) {
   const [active, setActive] = useState(0);
+  const listRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
   const filtered = SLASH_ITEMS.filter((t) =>
     BLOCK_LABELS[t].label.toLowerCase().includes(query.toLowerCase())
   );
 
+  useEffect(() => { setActive(0); }, [query]);
+
+  // Scroll active item into view inside the list container
   useEffect(() => {
-    setActive(0);
-  }, [query]);
+    itemRefs.current[active]?.scrollIntoView({ block: "nearest" });
+  }, [active]);
 
   useEffect(() => {
     const handler = (e: globalThis.KeyboardEvent) => {
@@ -50,31 +56,37 @@ function SlashMenu({ query, position, onSelect, onClose }: SlashMenuProps) {
   return (
     <div
       style={{ top: position.top, left: position.left }}
-      className="fixed z-[9999] w-64 bg-white dark:bg-[#1e1508] border border-[#e0d9cc] dark:border-[#3a3020] rounded-xl shadow-2xl shadow-black/10 overflow-hidden py-1"
+      className="fixed z-[9999] w-64 bg-white dark:bg-[#1e1508] border border-[#e0d9cc] dark:border-[#3a3020] rounded-xl shadow-2xl shadow-black/10 overflow-hidden"
     >
-      <p className="px-3 py-1.5 text-[10px] uppercase tracking-widest text-[#ad9a6f] dark:text-[#c4a97a] font-bold">
+      {/* Header — fijo, no scrollea */}
+      <p className="px-3 py-1.5 text-[10px] uppercase tracking-widest text-[#ad9a6f] dark:text-[#c4a97a] font-bold border-b border-[#f0ebe0] dark:border-[#2e2818]">
         Blocks
       </p>
-      {filtered.map((type, i) => {
-        const { label, icon, desc } = BLOCK_LABELS[type];
-        return (
-          <button
-            key={type}
-            onMouseDown={(e) => { e.preventDefault(); onSelect(type); }}
-            className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${
-              i === active ? "bg-[#f5f1e8] dark:bg-[#2a2010]" : "hover:bg-[#faf7f2] dark:hover:bg-[#251c0a]"
-            }`}
-          >
-            <span className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#f0ebe0] dark:bg-[#2e2410] text-[#615050] dark:text-[#c8b898] text-xs font-bold flex-shrink-0">
-              {icon}
-            </span>
-            <div>
-              <p className="text-sm text-[#615050] dark:text-[#f5f0e8] font-medium leading-none mb-0.5">{label}</p>
-              <p className="text-[10px] text-[#ad9a6f] dark:text-[#c4a97a]">{desc}</p>
-            </div>
-          </button>
-        );
-      })}
+
+      {/* Lista scrolleable — máximo 5 ítems visibles */}
+      <div ref={listRef} className="overflow-y-auto max-h-[260px] py-1">
+        {filtered.map((type, i) => {
+          const { label, icon, desc } = BLOCK_LABELS[type];
+          return (
+            <button
+              key={type}
+              ref={(el) => { itemRefs.current[i] = el; }}
+              onMouseDown={(e) => { e.preventDefault(); onSelect(type); }}
+              className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${
+                i === active ? "bg-[#f5f1e8] dark:bg-[#2a2010]" : "hover:bg-[#faf7f2] dark:hover:bg-[#251c0a]"
+              }`}
+            >
+              <span className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#f0ebe0] dark:bg-[#2e2410] text-[#615050] dark:text-[#c8b898] text-xs font-bold flex-shrink-0">
+                {icon}
+              </span>
+              <div>
+                <p className="text-sm text-[#615050] dark:text-[#f5f0e8] font-medium leading-none mb-0.5">{label}</p>
+                <p className="text-[10px] text-[#ad9a6f] dark:text-[#c4a97a]">{desc}</p>
+              </div>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
