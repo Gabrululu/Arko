@@ -2,6 +2,7 @@
   "name": "arko-app",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.32.1",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -18,6 +19,7 @@
     "@radix-ui/react-toast": "^1.2.15",
     "@tailwindcss/typography": "^0.5.19",
     "@tanstack/react-query": "^5.90.21",
+    "@types/three": "^0.184.1",
     "@uiw/react-md-editor": "^4.0.11",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -34,6 +36,7 @@
     "rehype-slug": "^6.0.0",
     "shiki": "^4.0.1",
     "tailwind-merge": "^3.5.0",
+    "three": "^0.184.0",
     "viem": "^2.47.0",
     "wagmi": "^3.5.0"
   },

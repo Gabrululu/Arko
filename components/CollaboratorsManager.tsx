@@ -27,7 +27,7 @@ export function CollaboratorsManager({ spaceId }: { spaceId: string }) {
     setToast("Requesting signature...");
     try {
       const arkivClient = await createSigningClient(walletClient);
-      setToast("Broadcasting to Kaolin...");
+      setToast("Broadcasting to Braga...");
       await addCollaborator(arkivClient, {
         spaceId,
         wallet: address,

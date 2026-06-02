@@ -93,7 +93,7 @@ export default function SettingsPage() {
         <h3 className="font-serif italic text-lg text-[#615050]">Sovereign Access Control</h3>
         <div className="space-y-3 text-sm text-[#776a6a] leading-relaxed">
           <p>
-            Arko uses on-chain permissions stored directly on the Kaolin network. Access is granted by the space owner and expires automatically after 90 days unless renewed.
+            Arko uses on-chain permissions stored directly on the Braga network. Access is granted by the space owner and expires automatically after 90 days unless renewed.
           </p>
           <p className="text-xs text-[#ad9a6f]">
             Owner: {space.owner}

@@ -1,23 +1,22 @@
 /**
  * Wagmi v2 configuration for Arko.
  *
- * We register the Kaolin testnet chain (from @arkiv-network/sdk/chains) so
- * wagmi knows how to connect wallets to it. MetaMask / injected wallets will
- * be prompted to switch to Kaolin when a write operation is triggered.
+ * We register the Braga testnet chain so wagmi knows how to connect wallets
+ * to it. MetaMask / injected wallets will be prompted to switch to Braga
+ * when a write operation is triggered.
  */
 
 import { createConfig, http } from "wagmi";
 import { injected } from "wagmi/connectors";
-import { kaolin } from "@arkiv-network/sdk/chains";
+import { braga } from "@/lib/chains";
 
 export const wagmiConfig = createConfig({
-  chains: [kaolin],
+  chains: [braga],
   connectors: [
-    // Solo usar injected para evitar problemas con MetaMask SDK
     injected(),
   ],
   transports: {
-    [kaolin.id]: http("https://kaolin.hoodi.arkiv.network/rpc"),
+    [braga.id]: http("https://braga.hoodi.arkiv.network/rpc"),
   },
 });
 

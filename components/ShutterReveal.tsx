@@ -1,62 +1,58 @@
-"use client"
+"use client";
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef } from "react";
+import { gsap } from "gsap";
+
+const PANELS = 5;
 
 export function ShutterReveal({ children }: { children: React.ReactNode }) {
-  const curtainRef = useRef<HTMLDivElement>(null)
+  const panelRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
-    const curtain = curtainRef.current
-    if (!curtain) return
-
-    // Skip if already played this session
     if (sessionStorage.getItem("arko-intro-done")) {
-      curtain.style.display = "none"
-      return
+      panelRefs.current.forEach((p) => { if (p) p.style.display = "none"; });
+      return;
     }
 
-    // Start: curtain covers full screen
-    curtain.style.transform = "translateY(0%)"
-    curtain.style.visibility = "visible"
+    const panels = panelRefs.current.filter(Boolean) as HTMLDivElement[];
 
-    // After brief pause, animate curtain upward
-    const t = setTimeout(() => {
-      curtain.style.transition = "transform 1.6s cubic-bezier(0.76, 0, 0.24, 1)"
-      curtain.style.transform = "translateY(-100%)"
+    gsap.set(panels, { yPercent: 0, visibility: "visible" });
 
-      // After animation ends, remove from DOM
-      const t2 = setTimeout(() => {
-        curtain.style.display = "none"
-        sessionStorage.setItem("arko-intro-done", "1")
-      }, 1700)
-
-      return () => clearTimeout(t2)
-    }, 300)
-
-    return () => clearTimeout(t)
-  }, [])
+    gsap.to(panels, {
+      yPercent: -105,
+      duration: 1.1,
+      ease: "power4.inOut",
+      stagger: 0.07,
+      delay: 0.25,
+      onComplete: () => {
+        panels.forEach((p) => { p.style.display = "none"; });
+        sessionStorage.setItem("arko-intro-done", "1");
+      },
+    });
+  }, []);
 
   return (
     <>
       {children}
 
-      {/* Single solid curtain panel — slides up on load */}
-      <div
-        ref={curtainRef}
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          backgroundColor: "#1f1303",
-          zIndex: 99999,
-          visibility: "hidden",
-          transform: "translateY(0%)",
-          willChange: "transform",
-          pointerEvents: "none",
-        }}
-      />
+      {Array.from({ length: PANELS }).map((_, i) => (
+        <div
+          key={i}
+          ref={(el) => { panelRefs.current[i] = el; }}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: `${(i / PANELS) * 100}%`,
+            width: `${100 / PANELS}%`,
+            height: "100%",
+            backgroundColor: i % 2 === 0 ? "#1f1303" : "#2a1c05",
+            zIndex: 99999,
+            visibility: "hidden",
+            willChange: "transform",
+            pointerEvents: "none",
+          }}
+        />
+      ))}
     </>
-  )
+  );
 }

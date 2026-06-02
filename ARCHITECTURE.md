@@ -2,7 +2,7 @@
 
 ## No external database
 
-Every read in Arko is a `publicClient.buildQuery().fetch()` call that issues an `arkiv_query` JSON-RPC request to the Kaolin node. Every write is a `walletClient.createEntity()` call that sends a signed transaction to the on-chain Arkiv contract. There is no Postgres, no Redis, no Supabase, no S3, and no custom backend service of any kind. The Kaolin node is the only infrastructure the app depends on, and it is public — anyone can query it without authentication or an API key. Server Components call `publicClient` directly at render time; Client Components call `createSigningClient` after the user connects their wallet.
+Every read in Arko is a `publicClient.buildQuery().fetch()` call that issues an `arkiv_query` JSON-RPC request to the Braga node. Every write is a `walletClient.createEntity()` call that sends a signed transaction to the on-chain Arkiv contract. There is no Postgres, no Redis, no Supabase, no S3, and no custom backend service of any kind. The Braga node is the only infrastructure the app depends on, and it is public — anyone can query it without authentication or an API key. Server Components call `publicClient` directly at render time; Client Components call `createSigningClient` after the user connects their wallet.
 
 ---
 
@@ -41,7 +41,7 @@ await walletClient.createEntity({
     { key: "version",     value: "3" },         // monotonically increasing integer
     { key: "author",      value: "0x…" },        // wallet address of the saver
     { key: "status",      value: "published" },  // "published" | "draft"
-    { key: "blockNumber", value: "21504823" },   // Kaolin block at save time
+    { key: "blockNumber", value: "21504823" },   // Braga block at save time
   ],
   expiresIn: ExpirationTime.fromDays(365),
 });
@@ -107,7 +107,7 @@ const result = await publicClient
 
 `validAtBlock(N)` is a `QueryBuilder` method that instructs the Arkiv node to answer as of block N — entities created after that block are excluded, and entities that had already expired by then are also excluded. This is a server-side operation on the Arkiv node, not client-side filtering. The result is reduced to the highest-versioned doc visible at that block, giving the canonical answer to "what did this doc say at block 21504823?"
 
-This is impossible to fake on a centralized platform. A traditional documentation service can silently edit or delete any historical version. Arko's versions are on-chain transactions — the existence and content of every version is cryptographically committed to the Kaolin chain. `validAtBlock()` is not a feature; it is a proof.
+This is impossible to fake on a centralized platform. A traditional documentation service can silently edit or delete any historical version. Arko's versions are on-chain transactions — the existence and content of every version is cryptographically committed to the Braga chain. `validAtBlock()` is not a feature; it is a proof.
 
 ---
 
@@ -115,7 +115,7 @@ This is impossible to fake on a centralized platform. A traditional documentatio
 
 `createSigningClient` wraps the wagmi `WalletClient` using `custom(viemWalletClient.transport)` rather than `http(rpcUrl)`. The distinction matters because browser wallets use "json-rpc" accounts: they sign by routing `eth_sendTransaction` through the wallet's own EIP-1193 provider (`window.ethereum`), not through an HTTP endpoint. If we passed `http(rpcUrl)`, viem would send the raw unsigned transaction directly to the Arkiv RPC node, which cannot sign on the user's behalf — the MetaMask popup would never appear.
 
-By passing `custom(viemWalletClient.transport)`, every RPC call is proxied through the wagmi transport that wraps `window.ethereum`. This means `sendTransaction` triggers the MetaMask confirmation popup, and `waitForTransactionReceipt` resolves through `window.ethereum` as well. The read side (`publicClient`) continues to use a plain `http()` transport, because Arkiv-specific methods like `arkiv_query` are available on the Kaolin node but not through MetaMask.
+By passing `custom(viemWalletClient.transport)`, every RPC call is proxied through the wagmi transport that wraps `window.ethereum`. This means `sendTransaction` triggers the MetaMask confirmation popup, and `waitForTransactionReceipt` resolves through `window.ethereum` as well. The read side (`publicClient`) continues to use a plain `http()` transport, because Arkiv-specific methods like `arkiv_query` are available on the Braga node but not through MetaMask.
 
 ---
 
@@ -137,14 +137,14 @@ By passing `custom(viemWalletClient.transport)`, every RPC call is proxied throu
                                      │ → MetaMask popup → user signs
                                      ▼
                         ┌─────────────────────────────┐
-                        │        Kaolin testnet        │
+                        │        Braga testnet        │
                         │      (Arkiv contract)        │
                         │   entities stored on-chain   │
                         └────────────┬────────────────┘
                                      │
                ┌─────────────────────┘
                │ publicClient.buildQuery().fetch()
-               │ http("https://kaolin.hoodi.arkiv.network/rpc")
+               │ http("https://braga.hoodi.arkiv.network/rpc")
                │ → arkiv_query JSON-RPC
                ▼
   ┌────────────────────────────┐

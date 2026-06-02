@@ -11,13 +11,17 @@ import type { Entity } from "@arkiv-network/sdk";
 export interface Doc {
   entityKey: string;
   title: string;
-  content: string; 
+  icon?: string;
+  cover?: string;
+  content: string;
   slug: string;
   spaceId: string;
   version: number;
   author: string;
   status: "published" | "draft";
   blockNumber: number;
+  // blocks payload (new format)
+  payload?: unknown;
 }
 
 // ─── Save  ────────────────────────────────
@@ -29,18 +33,25 @@ export async function saveDoc(
     content: string;
     slug: string;
     spaceId: string;
-    version: number; 
+    version: number;
     author: string;
     status: "published" | "draft";
+    icon?: string;
+    cover?: string;
+    payloadOverride?: unknown;
   }
-): Promise<string> {  
+): Promise<string> {
   const currentBlock = await publicClient.getBlockNumber();
 
+  const payloadData = params.payloadOverride ?? {
+    title: params.title,
+    content: params.content,
+    icon: params.icon,
+    cover: params.cover,
+  };
+
   const { entityKey } = await walletClient.createEntity({
-    payload: jsonToPayload({ 
-      title: params.title, 
-      content: params.content 
-    }),
+    payload: jsonToPayload(payloadData),
     contentType: "application/json",
     attributes: [
       { key: "type", value: "doc" },
@@ -179,22 +190,27 @@ function entityToDoc(entity: Entity): Doc {
     }
   }
 
-  let payload: { title?: string; content?: string } = {};
+  let raw: unknown = {};
   try {
-    payload = entity.toJson() as { title?: string; content?: string };
+    raw = entity.toJson();
   } catch {
     console.warn("Error decoding doc payload:", entity.key);
   }
 
+  const p = raw as { title?: string; content?: string; icon?: string; cover?: string; blocks?: unknown[] };
+
   return {
     entityKey: entity.key,
-    title: payload.title || "Untitled Document",
-    content: payload.content || "",
+    title: p.title || "Untitled",
+    icon: p.icon,
+    cover: p.cover,
+    content: p.content || "",
     slug: attrs["slug"] || "",
     spaceId: attrs["spaceId"] || "",
     version: parseInt(attrs["version"] || "1", 10),
     author: attrs["author"] || "0x0",
     status: (attrs["status"] || "draft") as "published" | "draft",
     blockNumber: parseInt(attrs["blockNumber"] || "0", 10),
+    payload: raw,
   };
 }

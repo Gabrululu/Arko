@@ -1,5 +1,5 @@
 /**
- * test-arkiv.ts — Integration test for the Arko data model on Kaolin testnet.
+ * test-arkiv.ts — Integration test for the Arko data model on Braga testnet.
  *
  * This script proves the full Arkiv round-trip works before wiring it to the UI:
  *   1. Create a space entity
@@ -14,16 +14,16 @@
  * 1. Create a test wallet and export its private key (0x-prefixed hex).
  *    MetaMask: Account menu → Account details → Show private key
  *
- * 2. Fund it with Kaolin testnet ETH:
- *    Faucet: https://kaolin.hoodi.arkiv.network/faucet/
+ * 2. Fund it with Braga testnet ETH:
+ *    Faucet: https://braga.hoodi.arkiv.network/faucet/
  *    (Enter your wallet address and request test ETH)
  *
- * 3. Add Kaolin to your wallet (for manual testing):
- *    - Network: Kaolin
- *    - RPC URL: https://kaolin.hoodi.arkiv.network/rpc
- *    - Chain ID: 60138453025
+ * 3. Add Braga to your wallet (for manual testing):
+ *    - Network: Braga
+ *    - RPC URL: https://braga.hoodi.arkiv.network/rpc
+ *    - Chain ID: 60138453102
  *    - Currency: ETH
- *    - Explorer: https://explorer.kaolin.hoodi.arkiv.network
+ *    - Explorer: https://explorer.braga.hoodi.arkiv.network
  *
  * 4. Create .env.local in the project root:
  *    ARKIV_TEST_PRIVATE_KEY=0x<your-private-key>
@@ -41,7 +41,27 @@ import { privateKeyToAccount } from "@arkiv-network/sdk/accounts";
 import { ExpirationTime, jsonToPayload } from "@arkiv-network/sdk/utils";
 import { eq } from "@arkiv-network/sdk/query";
 import { createPublicClient, createWalletClient, http, type Hex } from "@arkiv-network/sdk";
-import { kaolin } from "@arkiv-network/sdk/chains";
+import { defineChain } from "viem";
+
+const braga = defineChain({
+  id: 60138453102,
+  name: "Braga",
+  nativeCurrency: { name: "Ethereum", symbol: "ETH", decimals: 18 },
+  rpcUrls: {
+    default: {
+      http: ["https://braga.hoodi.arkiv.network/rpc"],
+      webSocket: ["wss://braga.hoodi.arkiv.network/rpc/ws"],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "Braga Arkiv Explorer",
+      url: "https://explorer.braga.hoodi.arkiv.network",
+      apiUrl: "https://explorer.braga.hoodi.arkiv.network/api",
+    },
+  },
+  testnet: true,
+});
 
 // ─── Load env ─────────────────────────────────────────────────────────────────
 
@@ -50,7 +70,7 @@ if (!privateKey) {
   console.error(
     "❌ ARKIV_TEST_PRIVATE_KEY not set in .env.local\n" +
       "   Create .env.local and add: ARKIV_TEST_PRIVATE_KEY=0x<your-key>\n" +
-      "   Faucet: https://kaolin.hoodi.arkiv.network/faucet/"
+      "   Faucet: https://braga.hoodi.arkiv.network/faucet/"
   );
   process.exit(1);
 }
@@ -61,14 +81,14 @@ if (!privateKey) {
 const account = privateKeyToAccount(privateKey);
 
 const walletClient = createWalletClient({
-  chain: kaolin,
-  transport: http("https://kaolin.hoodi.arkiv.network/rpc"),
+  chain: braga,
+  transport: http("https://braga.hoodi.arkiv.network/rpc"),
   account,
 });
 
 const publicClient = createPublicClient({
-  chain: kaolin,
-  transport: http("https://kaolin.hoodi.arkiv.network/rpc"),
+  chain: braga,
+  transport: http("https://braga.hoodi.arkiv.network/rpc"),
 });
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -101,7 +121,7 @@ async function main() {
   console.log(`   ✓ Space created`);
   console.log(`     entityKey: ${spaceKey}`);
   console.log(`     txHash:    ${spaceTx}`);
-  console.log(`     Explorer:  https://explorer.kaolin.hoodi.arkiv.network/tx/${spaceTx}`);
+  console.log(`     Explorer:  https://explorer.braga.hoodi.arkiv.network/tx/${spaceTx}`);
 
   // Step 3: Create doc v1 ─────────────────────────────────────────────────────
 
@@ -178,9 +198,6 @@ async function main() {
   console.log(`   ✓ Found space entity`);
   console.log(`     key: ${spaceEntity.key}`);
 
-  // ── Verify entity.toJson() ──
-  // jsonToPayload stores: toBytes(JSON.stringify(obj))
-  // toJson() inverts it:  JSON.parse(bytesToString(payload))
   const spacePayload = spaceEntity.toJson() as { name: string; description: string };
   console.log(`     payload (via toJson()): ${JSON.stringify(spacePayload)}`);
 
@@ -189,7 +206,6 @@ async function main() {
   }
   console.log(`   ✓ entity.toJson() works correctly`);
 
-  // ── Verify attributes ──
   const spaceAttrs: Record<string, string> = {};
   for (const a of spaceEntity.attributes) {
     spaceAttrs[a.key] = String(a.value);
@@ -232,8 +248,6 @@ async function main() {
 
   // Step 7: Test validAtBlock point-in-time query ─────────────────────────────
 
-  // Query state at the block AFTER v1 was created but BEFORE v2.
-  // This tests whether Arkiv correctly returns only v1 in that time slice.
   const beforeV2Block = blockAfterDocV1 - BigInt(1);
   console.log(`\n🕐 Testing validAtBlock — querying state at block ${beforeV2Block}…`);
   console.log(`   (This block is after v1 but before v2 — should return at most v1)`);
@@ -286,7 +300,7 @@ Start block      : ${startBlock}
 Doc v1 block     : ${blockAfterSpace}
 Doc v2 block     : ${blockAfterDocV1}
 
-View in explorer : https://explorer.kaolin.hoodi.arkiv.network
+View in explorer : https://explorer.braga.hoodi.arkiv.network
 `);
 }
 

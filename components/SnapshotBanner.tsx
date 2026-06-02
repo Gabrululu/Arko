@@ -30,7 +30,7 @@ export function SnapshotBanner({
             Point-in-Time Snapshot
           </p>
           <p className="text-xs leading-relaxed text-[#ad9a6f]/80">
-            Viewing state as of Kaolin block <span className="text-[#F5F0E8] font-mono">#{atBlock.toLocaleString()}</span>. 
+            Viewing state as of Braga block <span className="text-[#F5F0E8] font-mono">#{atBlock.toLocaleString()}</span>. 
             This specific version was committed at block <span className="font-mono">#{docBlockNumber.toLocaleString()}</span>.
           </p>
         </div>

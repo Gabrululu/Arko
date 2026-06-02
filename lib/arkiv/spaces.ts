@@ -15,7 +15,7 @@ export interface Space {
   slug: string;
   owner: string;
   visibility: "public" | "private";
-
+  icon?: string;
 }
 
 // ─── Create ───────────────────────────────────────────────────────────────────

@@ -21,14 +21,14 @@ Submission for the [Arkiv Web3 Database Builders Challenge](https://github.com/A
 git clone <repo-url> && cd arko
 npm install
 
-# 2. Get Kaolin testnet ETH
-#    → https://kaolin.hoodi.arkiv.network/faucet/
+# 2. Get Braga testnet ETH
+#    → https://braga.hoodi.arkiv.network/faucet/
 
 # 3. Run
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000), connect MetaMask (Kaolin testnet, chain ID `60138453025`), create a space, and write your first doc.
+Open [http://localhost:3000](http://localhost:3000), connect MetaMask (Braga testnet, chain ID `60138453102`), create a space, and write your first doc.
 
 **Optional — test the data layer without a browser:**
 
@@ -43,14 +43,14 @@ The script creates a space, saves two doc versions, queries them back, and verif
 
 ## How it works
 
-Arko uses Arkiv as its only data layer — no backend, no database, no external services. Every read is a `publicClient.buildQuery().fetch()` call to the Kaolin node; every write is a `walletClient.createEntity()` signed by the user's wallet. See [ARCHITECTURE.md](./ARCHITECTURE.md) for entity schemas, the immutable versioning pattern, the `validAtBlock` mechanic, and the transport bridge explanation.
+Arko uses Arkiv as its only data layer — no backend, no database, no external services. Every read is a `publicClient.buildQuery().fetch()` call to the Braga node; every write is a `walletClient.createEntity()` signed by the user's wallet. See [ARCHITECTURE.md](./ARCHITECTURE.md) for entity schemas, the immutable versioning pattern, the `validAtBlock` mechanic, and the transport bridge explanation.
 
 ---
 
 ## Built with
 
 - **Next.js 14** (App Router) — Server Components for reads, Client Components for writes
-- **@arkiv-network/sdk v0.6.0** — Kaolin testnet client
+- **@arkiv-network/sdk v0.6.2** — Braga testnet client
 - **wagmi v3 + viem** — wallet connection and EIP-1193 transport bridge
 - **Tailwind CSS** — styling
 - **@uiw/react-md-editor** — live markdown editor

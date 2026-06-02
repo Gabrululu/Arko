@@ -8,10 +8,10 @@ import {
   custom,
   http,
 } from "@arkiv-network/sdk";
-import { kaolin } from "@arkiv-network/sdk/chains";
+import { braga } from "@/lib/chains";
 import type { Account, PrivateKeyAccount } from "viem";
 
-const KAOLIN_ID = kaolin.id;
+const BRAGA_ID = braga.id;
 
 interface WagmiWalletClientLike {
   account?: Account;
@@ -30,31 +30,28 @@ export interface ArkivSigningClient {
 
 // ─── Public (read-only) client ───────────────────────────────────────────────
 export const publicClient = createPublicClient({
-  chain: kaolin,
-  transport: http("https://kaolin.hoodi.arkiv.network/rpc"),
+  chain: braga,
+  transport: http("https://braga.hoodi.arkiv.network/rpc"),
 });
 
 // ─── Signing client factory (browser wallet) ─────────────────────────────────
 export async function createSigningClient(viemWalletClient: WagmiWalletClientLike): Promise<ArkivSigningClient> {
-  // 1. Verificación de cuenta
   const account = viemWalletClient.account;
   if (!account) {
     throw new Error("WalletClient missing account. Conecta tu billetera primero.");
   }
 
-  // 2. Validación de Red (Seguridad Proactiva)
   const currentChainId = await viemWalletClient.getChainId();
 
-  if (Number(currentChainId) !== KAOLIN_ID) {
+  if (Number(currentChainId) !== BRAGA_ID) {
     throw new Error(
-      `Red incorrecta. Arko requiere Kaolin (ID: ${KAOLIN_ID}). ` +
+      `Red incorrecta. Arko requiere Braga (ID: ${BRAGA_ID}). ` +
       `Por favor, cambia de red en tu billetera.`
     );
   }
 
-  // 3. Inicialización del cliente de Arkiv
   const arkivWallet = createWalletClient({
-    chain: kaolin,
+    chain: braga,
     transport: custom(viemWalletClient.transport as Parameters<typeof custom>[0]),
     account: account,
   });
@@ -65,8 +62,8 @@ export async function createSigningClient(viemWalletClient: WagmiWalletClientLik
 // ─── Signing client factory (private key — para scripts/testing) ──────────────
 export function createSigningClientFromKey(privateKeyAccount: PrivateKeyAccount): ArkivSigningClient {
   const client = createWalletClient({
-    chain: kaolin,
-    transport: http("https://kaolin.hoodi.arkiv.network/rpc"),
+    chain: braga,
+    transport: http("https://braga.hoodi.arkiv.network/rpc"),
     account: privateKeyAccount,
   });
 

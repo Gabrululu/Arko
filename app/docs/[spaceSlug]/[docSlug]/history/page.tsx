@@ -20,7 +20,7 @@ export default async function HistoryPage(props: Props) {
   const space = await getSpaceBySlug(spaceSlug);
   if (!space) notFound();
 
-  // 2. Obtener historial desde el nodo Kaolin (Arkiv)
+  // 2. Obtener historial desde el nodo Braga (Arkiv)
   let versions: Doc[] = [];
   let historyError: string | null = null;
   
@@ -59,7 +59,7 @@ export default async function HistoryPage(props: Props) {
         <h1 className="text-3xl font-serif italic text-[#615050]">Provenance</h1>
         <p className="text-[#776a6a] text-sm leading-relaxed max-w-md">
           {versions.length} immutable version{versions.length !== 1 ? "s" : ""} recorded. 
-          Every save is cryptographically committed to the Kaolin chain.
+          Every save is cryptographically committed to the Braga chain.
         </p>
       </div>
 

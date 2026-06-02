@@ -1,71 +1,69 @@
 "use client";
 
-/**
- * Doc editor — /dashboard/[spaceSlug]/[docSlug]/edit
- *
- * Handles both creating a new doc (docSlug = "new") and editing an existing one.
- * On save, it ALWAYS creates a new Arkiv entity — never updates. The version
- * number is incremented from the current highest version for this slug.
- *
- * Core invariant: every save → new entity → version N+1.
- * Never call updateEntity. This is what gives Arko immutable version history.
- */
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAccount, useWalletClient } from "wagmi";
-import { Editor } from "@/components/Editor";
 import { createSigningClient } from "@/lib/arkiv/client";
 import { getSpaceBySlug, type Space } from "@/lib/arkiv/spaces";
 import { getLatestDoc, saveDoc, getNextVersion, type Doc } from "@/lib/arkiv/docs";
 import { useCanEdit } from "@/hooks/useCanEdit";
+import { BlockEditor } from "@/components/BlockEditor";
+import { type Block, type DocPayload, createBlock, isLegacyPayload, migrateToBlocks } from "@/lib/blocks";
 import Link from "next/link";
+import { gsap } from "gsap";
+import { Check, Clock, Globe, Lock, Smile } from "lucide-react";
+
+const COVER_PRESETS = [
+  "linear-gradient(135deg,#1f1303 0%,#3a2f22 100%)",
+  "linear-gradient(135deg,#1a1508 0%,#ad9a6f 100%)",
+  "linear-gradient(135deg,#0f2027 0%,#203a43 50%,#2c5364 100%)",
+  "linear-gradient(135deg,#200122 0%,#6f0000 100%)",
+  "linear-gradient(135deg,#11998e 0%,#38ef7d 100%)",
+  "linear-gradient(135deg,#141e30 0%,#243b55 100%)",
+];
+
+const ICON_PRESETS = ["📝","📖","🔒","⚡","🌿","🔬","🎯","💡","🧩","🚀","🌐","🔑"];
 
 export default function EditPage() {
   const params = useParams();
   const router = useRouter();
   const { address, isConnected } = useAccount();
   const { data: walletClient } = useWalletClient();
+  const pageRef = useRef<HTMLDivElement>(null);
 
   const spaceSlug = params.spaceSlug as string;
   const docSlug = params.docSlug as string;
   const isNew = docSlug === "new";
 
-  // ── Data state ────────────────────────────────────────────────────────
   const [space, setSpace] = useState<Space | null>(null);
   const [existing, setExisting] = useState<Doc | null>(null);
-  const [nextVersion, setNextVersion] = useState<number>(1);
+  const [nextVersion, setNextVersion] = useState(1);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
-  // Use the hook for permissions
-  const { allowed: canEdit, loading: permissionsLoading } = useCanEdit(space?.entityKey || "", space?.owner || "");
-
-  // Debug info
-  console.log("Edit page debug:", {
-    spaceSlug,
-    docSlug,
-    address,
-    space: space ? {
-      entityKey: space.entityKey,
-      owner: space.owner,
-      name: space.name
-    } : null,
-    canEdit,
-    permissionsLoading
-  });
-
-  // ── Form state ────────────────────────────────────────────────────────
+  // Document state
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState(isNew ? "" : docSlug);
-  const [content, setContent] = useState("");
+  const [icon, setIcon] = useState("📝");
+  const [cover, setCover] = useState<string | null>(null);
+  const [blocks, setBlocks] = useState<Block[]>([createBlock("paragraph")]);
+  const [showIconPicker, setShowIconPicker] = useState(false);
+  const [showCoverPicker, setShowCoverPicker] = useState(false);
 
-  // ── Save state ────────────────────────────────────────────────────────
+  // Save state
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [autoSaveTimer, setAutoSaveTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
-  // ── Load space + existing doc + permissions ────────────────────────────
+  const { allowed: canEdit, loading: permissionsLoading } = useCanEdit(
+    space?.entityKey || "",
+    space?.owner || ""
+  );
+
+  useEffect(() => { setMounted(true); }, []);
+
   useEffect(() => {
     if (!address) return;
     async function load() {
@@ -75,28 +73,29 @@ export default function EditPage() {
         const s = await getSpaceBySlug(spaceSlug);
         if (!s) { setLoadError(`Space "${spaceSlug}" not found.`); return; }
         setSpace(s);
-
-        console.log("Space loaded:", {
-          spaceSlug,
-          space: s,
-          userAddress: address,
-          ownerMatch: address?.toLowerCase() === s.owner.toLowerCase()
-        });
-
         const nv = isNew ? 1 : await getNextVersion(s.entityKey, docSlug);
         setNextVersion(nv);
-
         if (!isNew) {
           const doc = await getLatestDoc(s.entityKey, docSlug);
           if (doc) {
             setExisting(doc);
             setTitle(doc.title);
-            setContent(doc.content);
             setSlug(doc.slug);
+            setIcon(doc.icon ?? "📝");
+            setCover(doc.cover ?? null);
+            // Migrate or load blocks
+            const raw = doc.payload;
+            if (raw && typeof raw === "object" && "blocks" in raw) {
+              setBlocks((raw as DocPayload).blocks);
+            } else if (isLegacyPayload(raw)) {
+              setBlocks(migrateToBlocks(raw).blocks);
+            } else if (doc.content) {
+              setBlocks(migrateToBlocks({ title: doc.title, content: doc.content }).blocks);
+            }
           }
         }
       } catch (e) {
-        setLoadError(e instanceof Error ? e.message : "Failed to load editor.");
+        setLoadError(e instanceof Error ? e.message : "Failed to load.");
       } finally {
         setLoading(false);
       }
@@ -104,116 +103,104 @@ export default function EditPage() {
     load();
   }, [address, spaceSlug, docSlug, isNew]);
 
-  // ── Mount effect ──────────────────────────────────────────────────────
+  // Page entrance animation
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    if (!pageRef.current || loading) return;
+    gsap.fromTo(pageRef.current, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" });
+  }, [loading]);
 
-  // ── Auto-generate slug from title (new docs only) ─────────────────────
-  function handleTitleChange(val: string) {
+  const handleTitleChange = (val: string) => {
     setTitle(val);
     if (isNew) {
       setSlug(
-        val
-          .toLowerCase()
+        val.toLowerCase()
           .replace(/\s+/g, "-")
           .replace(/[^a-z0-9-]/g, "")
           .replace(/-+/g, "-")
           .replace(/^-|-$/g, "")
       );
     }
-  }
+  };
 
-  // ── Save ──────────────────────────────────────────────────────────────
-  async function handleSave(status: "draft" | "published") {
-    if (!isConnected || !address || !space) return;
-    if (!walletClient) { setSaveError("Wallet client is still loading — please try again."); return; }
-    if (!title.trim()) { setSaveError("Title is required."); return; }
-    if (!slug.trim()) { setSaveError("Slug is required."); return; }
-
-    setSaving(true);
-    setSaveError(null);
-    try {
-      const targetSlug = slug.trim();
-      // Recalculate next version for the final slug in case user changed it
-      const versionToUse = await getNextVersion(space.entityKey, targetSlug);
-      setNextVersion(versionToUse);
-
-      const arkivClient = await createSigningClient(walletClient);
-      await saveDoc(arkivClient, {
-        title: title.trim(),
-        content,
-        slug: targetSlug,
-        spaceId: space.entityKey,
-        version: versionToUse,
-        author: address,
-        status,
-      });
-
-      if (status === "published") {
-        // After publishing, go to the live doc.
-        router.push(`/docs/${spaceSlug}/${targetSlug}`);
-      } else {
-        // For drafts: update URL if slug changed from "new"
-        if (isNew) {
+  const doSave = useCallback(
+    async (status: "draft" | "published") => {
+      if (!isConnected || !address || !space || !walletClient) return;
+      if (!title.trim()) { setSaveError("Title is required."); return; }
+      setSaving(true);
+      setSaveError(null);
+      try {
+        const targetSlug = slug.trim() || title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+        const versionToUse = await getNextVersion(space.entityKey, targetSlug);
+        const payload: DocPayload = { title: title.trim(), icon, cover: cover ?? undefined, blocks };
+        const arkivClient = await createSigningClient(walletClient);
+        await saveDoc(arkivClient, {
+          title: title.trim(),
+          content: blocks.map((b) => b.content).join("\n"),
+          slug: targetSlug,
+          spaceId: space.entityKey,
+          version: versionToUse,
+          author: address,
+          status,
+          icon,
+          cover: cover ?? undefined,
+          payloadOverride: payload,
+        });
+        setLastSaved(new Date());
+        if (status === "published") {
+          router.push(`/docs/${spaceSlug}/${targetSlug}`);
+        } else if (isNew) {
           router.replace(`/dashboard/${spaceSlug}/${targetSlug}/edit`);
+          setNextVersion(versionToUse + 1);
         }
-        // Refresh the next version number
-        setNextVersion(versionToUse + 1);
+      } catch (err) {
+        setSaveError(err instanceof Error ? err.message : "Save failed.");
+      } finally {
+        setSaving(false);
       }
-    } catch (err) {
-      setSaveError(err instanceof Error ? err.message : "Save failed. Try again.");
-    } finally {
-      setSaving(false);
-    }
-  }
+    },
+    [address, blocks, cover, icon, isConnected, isNew, router, slug, space, spaceSlug, title, walletClient]
+  );
 
-  // ── Guards ────────────────────────────────────────────────────────────
+  // Auto-save draft every 30s when content changes
+  const handleBlocksChange = useCallback(
+    (newBlocks: Block[]) => {
+      setBlocks(newBlocks);
+      if (autoSaveTimer) clearTimeout(autoSaveTimer);
+      if (!isNew && canEdit) {
+        const t = setTimeout(() => doSave("draft"), 30000);
+        setAutoSaveTimer(t);
+      }
+    },
+    [autoSaveTimer, canEdit, doSave, isNew]
+  );
 
-  if (!mounted) {
+  useEffect(() => () => { if (autoSaveTimer) clearTimeout(autoSaveTimer); }, [autoSaveTimer]);
+
+  if (!mounted || loading || permissionsLoading) {
     return (
-      <div className="space-y-5 animate-pulse max-w-4xl mx-auto px-6 py-10">
-        <div className="h-4 w-48 bg-[#ede8dc] rounded" />
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div className="h-10 bg-[#ede8dc] rounded-lg" />
-          <div className="h-10 bg-[#ede8dc] rounded-lg" />
+      <div className="max-w-3xl mx-auto px-8 py-16 animate-pulse space-y-6">
+        <div className="h-12 w-3/4 bg-[#ede8dc] rounded-xl" />
+        <div className="space-y-3">
+          {[77, 84, 91, 98].map((w, i) => <div key={i} className="h-5 bg-[#ede8dc] rounded" style={{ width: `${w}%` }} />)}
         </div>
-        <div className="h-[520px] bg-[#ede8dc] rounded-xl" />
       </div>
     );
   }
 
   if (!isConnected) {
     return (
-      <div className="max-w-5xl mx-auto px-6 py-10 flex flex-col items-center justify-center min-h-[70vh] text-center">
-        <div className="w-12 h-12 rounded-xl bg-[#f5f1e8] border border-[#d4c9b0] flex items-center justify-center text-xl mb-4">
-          🔐
-        </div>
-        <p className="text-[#615050] font-semibold">Connect your wallet to edit docs.</p>
-      </div>
-    );
-  }
-
-  if (loading || permissionsLoading) {
-    return (
-      <div className="space-y-5 animate-pulse max-w-4xl mx-auto px-6 py-10">
-        <div className="h-4 w-48 bg-[#ede8dc] rounded" />
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div className="h-10 bg-[#ede8dc] rounded-lg" />
-          <div className="h-10 bg-[#ede8dc] rounded-lg" />
-        </div>
-        <div className="h-[520px] bg-[#ede8dc] rounded-xl" />
+      <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-6">
+        <div className="text-4xl mb-4">🔐</div>
+        <p className="text-[#615050] font-semibold">Connect your wallet to edit.</p>
       </div>
     );
   }
 
   if (loadError) {
     return (
-      <div className="py-8 space-y-2 max-w-4xl mx-auto px-6">
-        <p className="text-red-500 text-sm">{loadError}</p>
-        <Link href="/dashboard" className="text-[#ad9a6f] text-xs hover:underline">
-          ← Back to dashboard
-        </Link>
+      <div className="max-w-3xl mx-auto px-8 py-12">
+        <p className="text-red-500 text-sm mb-3">{loadError}</p>
+        <Link href="/dashboard" className="text-[#ad9a6f] text-xs hover:underline">← Back</Link>
       </div>
     );
   }
@@ -221,118 +208,213 @@ export default function EditPage() {
   if (!space) return null;
 
   return (
-    <div className="space-y-5 max-w-4xl mx-auto px-6 py-10">
+    <div ref={pageRef} className="flex flex-col min-h-[calc(100vh-64px)]">
 
-      {/* ── Access Denied Banner ────────────────────────────────────────── */}
-      {!canEdit && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-          <p className="text-red-700 font-medium">
-            Access Denied: Only the owner or authorized collaborators can edit this space.
-          </p>
+      {/* ── Cover ──────────────────────────────────────────────────────────────── */}
+      {cover ? (
+        <div
+          className="w-full h-40 relative group"
+          style={{ background: cover }}
+        >
+          <div className="absolute inset-0 flex items-end justify-end p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowCoverPicker((s) => !s)}
+                className="px-3 py-1.5 bg-black/30 backdrop-blur text-white text-xs rounded-lg hover:bg-black/50 transition-colors"
+              >
+                Change cover
+              </button>
+              <button
+                onClick={() => setCover(null)}
+                className="px-3 py-1.5 bg-black/30 backdrop-blur text-white text-xs rounded-lg hover:bg-black/50 transition-colors"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
         </div>
-      )}
+      ) : null}
 
-      {/* ── Breadcrumb ─────────────────────────────────────────────────── */}
-      <nav className="flex items-center gap-2 text-sm text-[#776a6a]">
-        <Link href="/dashboard" className="hover:text-[#615050] transition-colors">Dashboard</Link>
-        <span>/</span>
-        <Link href={`/dashboard/${spaceSlug}`} className="hover:text-[#615050] transition-colors">
-          {space.name}
-        </Link>
-        <span>/</span>
-        <span className="text-[#615050]">
-          {isNew ? "New doc" : (existing?.title || docSlug)}
-        </span>
-      </nav>
+      {/* ── Page content ───────────────────────────────────────────────────────── */}
+      <div className="flex-1 max-w-3xl w-full mx-auto px-8 md:px-16 py-10">
 
-      {/* ── Version badge ─────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3">
-        <span className="px-2.5 py-1 bg-[#f0ebe0] border border-[#ad9a6f]/60 text-[#ad9a6f] text-xs font-mono rounded-lg">
-          Creating version {nextVersion}
-        </span>
-        {existing && (
-          <span className="text-[#776a6a] text-xs">
-            Latest on-chain: v{existing.version} · block {existing.blockNumber.toLocaleString()}
-          </span>
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-xs text-[#ad9a6f] mb-8">
+          <Link href="/dashboard" className="hover:text-[#615050] transition-colors">Dashboard</Link>
+          <span>/</span>
+          <Link href={`/dashboard/${spaceSlug}`} className="hover:text-[#615050] transition-colors">{space.name}</Link>
+          <span>/</span>
+          <span className="text-[#615050]">{isNew ? "New page" : (existing?.title || docSlug)}</span>
+        </nav>
+
+        {/* Access denied */}
+        {!canEdit && (
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-sm flex items-center gap-2">
+            <Lock size={14} />
+            Read-only — you don&apos;t have edit access to this space.
+          </div>
         )}
-      </div>
 
-      {/* ── Metadata fields ────────────────────────────────────────────── */}
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs font-medium text-[#776a6a] mb-1.5">Title</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => handleTitleChange(e.target.value)}
-            placeholder="Getting Started"
-            disabled={!canEdit}
-            className="w-full px-3 py-2 bg-[#ede8dc] border border-[#c4b89a] rounded-lg text-[#615050] placeholder-[#ad9a6f]/60 text-sm focus:outline-none focus:border-[#ad9a6f] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-[#776a6a] mb-1.5">
-            Slug
-            <span className="ml-2 font-mono text-[#ad9a6f] font-normal">
-              /docs/{spaceSlug}/{slug || "…"}
-            </span>
-          </label>
-          <input
-            type="text"
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-            placeholder="getting-started"
-            disabled={!canEdit}
-            className="w-full px-3 py-2 bg-[#ede8dc] border border-[#c4b89a] rounded-lg text-[#615050] placeholder-[#ad9a6f]/60 text-sm font-mono focus:outline-none focus:border-[#ad9a6f] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          />
-        </div>
-      </div>
-
-      {/* ── Markdown editor ────────────────────────────────────────────── */}
-      <Editor value={content} onChange={setContent} height={520} disabled={!canEdit} />
-
-      {/* ── Immutability note ──────────────────────────────────────────── */}
-      <p className="text-xs text-[#776a6a]">
-        Each save creates a new immutable Arkiv entity. Publishing redirects to the live doc.
-        Drafts stay here for further editing.
-      </p>
-
-      {saveError && (
-        <p className="text-red-500 text-sm">{saveError}</p>
-      )}
-
-      {/* ── Actions ────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3 pb-8">
-        <button
-          onClick={() => handleSave("draft")}
-          disabled={!canEdit || saving}
-          className="px-5 py-2.5 text-sm text-[#776a6a] border border-[#d4c9b0] rounded-lg hover:border-[#ad9a6f] disabled:opacity-40 transition-colors"
-        >
-          {saving ? "Saving…" : "Save draft"}
-        </button>
-        <button
-          onClick={() => handleSave("published")}
-          disabled={!canEdit || saving}
-          className="px-5 py-2.5 text-sm bg-[#615050] hover:bg-[#776a6a] disabled:opacity-40 text-white font-medium rounded-lg transition-colors flex items-center gap-2"
-        >
-          {saving ? (
-            <>
-              <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              Publishing…
-            </>
-          ) : (
-            "Publish"
-          )}
-        </button>
-        {existing && (
-          <Link
-            href={`/docs/${spaceSlug}/${existing.slug}/history`}
-            className="ml-auto text-xs text-[#ad9a6f] hover:text-[#776a6a] transition-colors"
+        {/* Icon row */}
+        <div className="relative flex items-center gap-3 mb-2 group">
+          <button
+            onClick={() => setShowIconPicker((s) => !s)}
+            className="text-5xl hover:scale-105 transition-transform cursor-pointer"
+            title="Change icon"
           >
-            Version history →
-          </Link>
+            {icon}
+          </button>
+
+          {/* Icon picker */}
+          {showIconPicker && (
+            <div className="absolute top-14 left-0 z-50 bg-white border border-[#d4c9b0] rounded-2xl shadow-xl p-3 flex flex-wrap gap-2 w-64">
+              {ICON_PRESETS.map((e) => (
+                <button
+                  key={e}
+                  onClick={() => { setIcon(e); setShowIconPicker(false); }}
+                  className="text-2xl w-10 h-10 flex items-center justify-center rounded-lg hover:bg-[#f5f1e8] transition-colors"
+                >
+                  {e}
+                </button>
+              ))}
+              <input
+                type="text"
+                placeholder="Or type an emoji…"
+                className="w-full mt-1 px-2 py-1 text-sm border border-[#d4c9b0] rounded-lg outline-none focus:border-[#ad9a6f] text-[#615050]"
+                onChange={(e) => { if (e.target.value) setIcon(e.target.value); }}
+              />
+            </div>
+          )}
+
+          {/* Cover/actions  */}
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+            {!cover && (
+              <button
+                onClick={() => setShowCoverPicker((s) => !s)}
+                className="flex items-center gap-1 text-xs text-[#ad9a6f] hover:text-[#615050] border border-[#d4c9b0] px-2.5 py-1 rounded-lg transition-colors"
+              >
+                <Globe size={11} /> Add cover
+              </button>
+            )}
+            <button
+              onClick={() => setShowIconPicker((s) => !s)}
+              className="flex items-center gap-1 text-xs text-[#ad9a6f] hover:text-[#615050] border border-[#d4c9b0] px-2.5 py-1 rounded-lg transition-colors"
+            >
+              <Smile size={11} /> Change icon
+            </button>
+          </div>
+        </div>
+
+        {/* Cover picker */}
+        {showCoverPicker && (
+          <div className="mb-4 p-3 bg-[#f5f1e8] border border-[#d4c9b0] rounded-xl flex flex-wrap gap-2">
+            {COVER_PRESETS.map((g, i) => (
+              <button
+                key={i}
+                onClick={() => { setCover(g); setShowCoverPicker(false); }}
+                className="w-16 h-10 rounded-lg border-2 border-transparent hover:border-[#ad9a6f] transition-all"
+                style={{ background: g }}
+              />
+            ))}
+          </div>
         )}
+
+        {/* Title */}
+        <div
+          contentEditable={canEdit}
+          suppressContentEditableWarning
+          data-placeholder="Untitled"
+          onInput={(e) => handleTitleChange(e.currentTarget.textContent ?? "")}
+          className="text-4xl md:text-5xl font-serif text-[#1a1508] font-bold leading-tight mb-1
+                     outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-[#d4c9b0]
+                     break-words"
+        >
+          {title || ""}
+        </div>
+
+        {/* Slug */}
+        <div className="flex items-center gap-2 mb-8 mt-2">
+          <p className="text-[11px] font-mono text-[#c4b89a]">
+            /docs/{spaceSlug}/{slug || "untitled"}
+          </p>
+          {isNew && (
+            <input
+              type="text"
+              value={slug}
+              onChange={(e) => setSlug(e.target.value)}
+              placeholder="custom-slug"
+              className="text-[11px] font-mono text-[#ad9a6f] border-b border-dashed border-[#d4c9b0] outline-none bg-transparent focus:border-[#ad9a6f] px-1"
+            />
+          )}
+          <span className="text-[10px] text-[#c4b89a] font-mono">· v{nextVersion}</span>
+          {existing && (
+            <Link
+              href={`/docs/${spaceSlug}/${existing.slug}/history`}
+              className="text-[10px] text-[#ad9a6f] hover:underline ml-auto flex items-center gap-1"
+            >
+              <Clock size={10} /> History
+            </Link>
+          )}
+        </div>
+
+        {/* Divider */}
+        <hr className="border-[#e0d9cc] mb-6" />
+
+        {/* Block editor */}
+        <div className="min-h-[400px] pb-32">
+          {canEdit ? (
+            <BlockEditor blocks={blocks} onChange={handleBlocksChange} />
+          ) : (
+            <BlockEditor blocks={blocks} onChange={() => {}} readOnly />
+          )}
+        </div>
       </div>
+
+      {/* ── Save toolbar (sticky bottom) ───────────────────────────────────────── */}
+      {canEdit && (
+        <div className="sticky bottom-0 z-30 border-t border-[#d4c9b0] bg-[#fcfcfc]/90 backdrop-blur-md px-8 py-3">
+          <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 text-xs text-[#ad9a6f]">
+              {saving && (
+                <span className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 border-2 border-[#ad9a6f]/30 border-t-[#ad9a6f] rounded-full animate-spin" />
+                  Saving…
+                </span>
+              )}
+              {lastSaved && !saving && (
+                <span className="flex items-center gap-1.5 text-emerald-600">
+                  <Check size={12} /> Saved
+                </span>
+              )}
+              {saveError && <span className="text-red-500">{saveError}</span>}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => doSave("draft")}
+                disabled={saving}
+                className="px-4 py-2 text-xs border border-[#d4c9b0] rounded-xl text-[#776a6a]
+                           hover:border-[#ad9a6f] hover:text-[#615050] disabled:opacity-40 transition-all"
+              >
+                Save draft
+              </button>
+              <button
+                onClick={() => doSave("published")}
+                disabled={saving}
+                className="px-5 py-2 text-xs bg-[#615050] hover:bg-[#4a3d3d] text-white rounded-xl
+                           disabled:opacity-40 transition-all font-medium flex items-center gap-2"
+              >
+                {saving ? (
+                  <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Globe size={12} />
+                )}
+                Publish
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
