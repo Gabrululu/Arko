@@ -5,6 +5,7 @@ import {
   useState,
   useCallback,
   useEffect,
+  useLayoutEffect,
   KeyboardEvent,
 } from "react";
 import { type Block, type BlockType, createBlock, BLOCK_LABELS } from "@/lib/blocks";
@@ -49,9 +50,9 @@ function SlashMenu({ query, position, onSelect, onClose }: SlashMenuProps) {
   return (
     <div
       style={{ top: position.top, left: position.left }}
-      className="fixed z-[9999] w-64 bg-white border border-[#e0d9cc] rounded-xl shadow-2xl shadow-black/10 overflow-hidden py-1"
+      className="fixed z-[9999] w-64 bg-white dark:bg-[#1e1508] border border-[#e0d9cc] dark:border-[#3a3020] rounded-xl shadow-2xl shadow-black/10 overflow-hidden py-1"
     >
-      <p className="px-3 py-1.5 text-[10px] uppercase tracking-widest text-[#ad9a6f] font-bold">
+      <p className="px-3 py-1.5 text-[10px] uppercase tracking-widest text-[#ad9a6f] dark:text-[#c4a97a] font-bold">
         Blocks
       </p>
       {filtered.map((type, i) => {
@@ -61,15 +62,15 @@ function SlashMenu({ query, position, onSelect, onClose }: SlashMenuProps) {
             key={type}
             onMouseDown={(e) => { e.preventDefault(); onSelect(type); }}
             className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${
-              i === active ? "bg-[#f5f1e8]" : "hover:bg-[#faf7f2]"
+              i === active ? "bg-[#f5f1e8] dark:bg-[#2a2010]" : "hover:bg-[#faf7f2] dark:hover:bg-[#251c0a]"
             }`}
           >
-            <span className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#f0ebe0] text-[#615050] text-xs font-bold flex-shrink-0">
+            <span className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#f0ebe0] dark:bg-[#2e2410] text-[#615050] dark:text-[#c8b898] text-xs font-bold flex-shrink-0">
               {icon}
             </span>
             <div>
-              <p className="text-sm text-[#615050] font-medium leading-none mb-0.5">{label}</p>
-              <p className="text-[10px] text-[#ad9a6f]">{desc}</p>
+              <p className="text-sm text-[#615050] dark:text-[#f5f0e8] font-medium leading-none mb-0.5">{label}</p>
+              <p className="text-[10px] text-[#ad9a6f] dark:text-[#c4a97a]">{desc}</p>
             </div>
           </button>
         );
@@ -92,6 +93,23 @@ interface BlockItemProps {
 
 function BlockItem({ block, index, isFocused, onChange, onKeyDown, onFocus, onSlash }: BlockItemProps) {
   const ref = useRef<HTMLDivElement & HTMLTextAreaElement & HTMLInputElement>(null);
+  // Prevents clobbering the cursor when the user is actively typing.
+  // Set to true in handleInput, cleared after the layout effect runs.
+  const skipDomSyncRef = useRef(false);
+
+  // Sync block.content → DOM only when the change comes from outside (e.g. initial
+  // load, undo). When the user types, skipDomSyncRef prevents the innerHTML reset
+  // that would destroy the cursor position.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || skipDomSyncRef.current) {
+      skipDomSyncRef.current = false;
+      return;
+    }
+    if (el.contentEditable === "true" && el.textContent !== block.content) {
+      el.textContent = block.content;
+    }
+  }, [block.content]);
 
   useEffect(() => {
     if (isFocused && ref.current && document.activeElement !== ref.current) {
@@ -109,6 +127,7 @@ function BlockItem({ block, index, isFocused, onChange, onKeyDown, onFocus, onSl
   }, [isFocused]);
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
+    skipDomSyncRef.current = true; // block the layout effect from resetting innerHTML
     const text = (e.currentTarget.textContent ?? "").replace(/​/g, "");
     // Detect "/" at start
     if (text === "/") {
@@ -119,7 +138,7 @@ function BlockItem({ block, index, isFocused, onChange, onKeyDown, onFocus, onSl
   };
 
   const baseDiv =
-    "w-full outline-none break-words whitespace-pre-wrap empty:before:content-[attr(data-placeholder)] empty:before:text-[#c4b89a] empty:before:pointer-events-none";
+    "w-full outline-none break-words whitespace-pre-wrap empty:before:content-[attr(data-placeholder)] empty:before:text-[#b0a088] empty:before:pointer-events-none";
 
   if (block.type === "divider") {
     return (
@@ -147,7 +166,6 @@ function BlockItem({ block, index, isFocused, onChange, onKeyDown, onFocus, onSl
           onKeyDown={(e) => onKeyDown(e, block.id)}
           onFocus={() => onFocus(block.id)}
           className={`${baseDiv} text-[#615050] ${block.checked ? "line-through text-[#ad9a6f]" : ""}`}
-          dangerouslySetInnerHTML={{ __html: block.content }}
         />
       </div>
     );
@@ -155,13 +173,13 @@ function BlockItem({ block, index, isFocused, onChange, onKeyDown, onFocus, onSl
 
   if (block.type === "code") {
     return (
-      <div className="relative rounded-xl bg-[#1a1508] border border-[#2a2318] my-1 overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-2 border-b border-[#2a2318]">
-          <span className="text-[10px] font-mono text-[#6a5f52] uppercase tracking-wider">code</span>
+      <div className="relative rounded-xl bg-[#1a1508] dark:bg-[#141008] border border-[#2a2318] dark:border-[#2e2818] my-1 overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-2 border-b border-[#2a2318] dark:border-[#2e2818]">
+          <span className="text-[10px] font-mono text-[#6a5f52] dark:text-[#5a5040] uppercase tracking-wider">code</span>
           <div className="flex gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-[#2a2318]" />
-            <span className="w-3 h-3 rounded-full bg-[#2a2318]" />
-            <span className="w-3 h-3 rounded-full bg-[#2a2318]" />
+            <span className="w-3 h-3 rounded-full bg-[#2a2318] dark:bg-[#2e2818]" />
+            <span className="w-3 h-3 rounded-full bg-[#2a2318] dark:bg-[#2e2818]" />
+            <span className="w-3 h-3 rounded-full bg-[#2a2318] dark:bg-[#2e2818]" />
           </div>
         </div>
         <textarea
@@ -191,7 +209,6 @@ function BlockItem({ block, index, isFocused, onChange, onKeyDown, onFocus, onSl
           onKeyDown={(e) => onKeyDown(e, block.id)}
           onFocus={() => onFocus(block.id)}
           className={`${baseDiv} text-[#776a6a] italic text-lg`}
-          dangerouslySetInnerHTML={{ __html: block.content }}
         />
       </div>
     );
@@ -199,7 +216,7 @@ function BlockItem({ block, index, isFocused, onChange, onKeyDown, onFocus, onSl
 
   if (block.type === "callout") {
     return (
-      <div className="flex gap-3 p-4 rounded-xl bg-[#f5f1e8] border border-[#d4c9b0] my-1">
+      <div className="flex gap-3 p-4 rounded-xl bg-[#f5f1e8] dark:bg-[#251c0a] border border-[#d4c9b0] dark:border-[#3a3020] my-1">
         <span className="text-xl flex-shrink-0">{block.emoji ?? "💡"}</span>
         <div
           ref={ref as React.Ref<HTMLDivElement>}
@@ -210,19 +227,18 @@ function BlockItem({ block, index, isFocused, onChange, onKeyDown, onFocus, onSl
           onKeyDown={(e) => onKeyDown(e, block.id)}
           onFocus={() => onFocus(block.id)}
           className={`${baseDiv} text-[#615050]`}
-          dangerouslySetInnerHTML={{ __html: block.content }}
         />
       </div>
     );
   }
 
   const styleMap: Record<string, string> = {
-    heading1: "text-3xl font-bold text-[#1a1508] font-serif mt-6",
-    heading2: "text-2xl font-semibold text-[#2a1c05] font-serif mt-5",
-    heading3: "text-xl font-semibold text-[#3a2f22] font-serif mt-4",
-    bullet:   "text-[#615050]",
-    numbered: "text-[#615050]",
-    paragraph: "text-[#615050] leading-relaxed",
+    heading1: "text-3xl font-bold text-[#1a1508] dark:text-[#f5f0e8] font-serif mt-6",
+    heading2: "text-2xl font-semibold text-[#2a1c05] dark:text-[#e8e0d0] font-serif mt-5",
+    heading3: "text-xl font-semibold text-[#3a2f22] dark:text-[#d8d0c0] font-serif mt-4",
+    bullet:   "text-[#615050] dark:text-[#c8b898]",
+    numbered: "text-[#615050] dark:text-[#c8b898]",
+    paragraph: "text-[#615050] dark:text-[#c8b898] leading-relaxed",
   };
 
   const placeholders: Record<string, string> = {
@@ -236,9 +252,9 @@ function BlockItem({ block, index, isFocused, onChange, onKeyDown, onFocus, onSl
 
   const prefix =
     block.type === "bullet" ? (
-      <span className="mr-2 text-[#ad9a6f] flex-shrink-0">•</span>
+      <span className="mr-2 text-[#ad9a6f] dark:text-[#c4a97a] flex-shrink-0">•</span>
     ) : block.type === "numbered" ? (
-      <span className="mr-2 text-[#ad9a6f] flex-shrink-0 font-mono text-sm">{index + 1}.</span>
+      <span className="mr-2 text-[#ad9a6f] dark:text-[#c4a97a] flex-shrink-0 font-mono text-sm">{index + 1}.</span>
     ) : null;
 
   return (
@@ -253,7 +269,6 @@ function BlockItem({ block, index, isFocused, onChange, onKeyDown, onFocus, onSl
         onKeyDown={(e) => onKeyDown(e, block.id)}
         onFocus={() => onFocus(block.id)}
         className={`${baseDiv} ${styleMap[block.type] ?? "text-[#615050]"}`}
-        dangerouslySetInnerHTML={{ __html: block.content }}
       />
     </div>
   );
@@ -416,9 +431,9 @@ export function BlockEditor({ blocks, onChange, readOnly = false }: BlockEditorP
           onChange([...blocks, newBlock]);
           setFocusedId(newBlock.id);
         }}
-        className="w-full mt-2 py-2 text-left text-[#c4b89a] text-sm hover:text-[#ad9a6f] transition-colors flex items-center gap-2 group"
+        className="w-full mt-2 py-2 text-left text-[#8a7a6a] dark:text-[#6a5f52] text-sm hover:text-[#ad9a6f] dark:hover:text-[#c4a97a] transition-colors flex items-center gap-2 group"
       >
-        <span className="w-5 h-5 rounded border border-[#d4c9b0] group-hover:border-[#ad9a6f] flex items-center justify-center text-xs transition-colors">+</span>
+        <span className="w-5 h-5 rounded border border-[#d4c9b0] dark:border-[#3a3020] group-hover:border-[#ad9a6f] dark:group-hover:border-[#c4a97a] flex items-center justify-center text-xs transition-colors">+</span>
         <span className="text-xs">Add a block</span>
       </button>
     </div>

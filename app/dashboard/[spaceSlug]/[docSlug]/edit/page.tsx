@@ -179,9 +179,9 @@ export default function EditPage() {
   if (!mounted || loading || permissionsLoading) {
     return (
       <div className="max-w-3xl mx-auto px-8 py-16 animate-pulse space-y-6">
-        <div className="h-12 w-3/4 bg-[#ede8dc] rounded-xl" />
+        <div className="h-12 w-3/4 bg-[#ede8dc] dark:bg-[#2e2410] rounded-xl" />
         <div className="space-y-3">
-          {[77, 84, 91, 98].map((w, i) => <div key={i} className="h-5 bg-[#ede8dc] rounded" style={{ width: `${w}%` }} />)}
+          {[77, 84, 91, 98].map((w, i) => <div key={i} className="h-5 bg-[#ede8dc] dark:bg-[#2e2410] rounded" style={{ width: `${w}%` }} />)}
         </div>
       </div>
     );
@@ -191,7 +191,7 @@ export default function EditPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-6">
         <div className="text-4xl mb-4">🔐</div>
-        <p className="text-[#615050] font-semibold">Connect your wallet to edit.</p>
+        <p className="text-[#615050] dark:text-[#f5f0e8] font-semibold">Connect your wallet to edit.</p>
       </div>
     );
   }
@@ -239,17 +239,17 @@ export default function EditPage() {
       <div className="flex-1 max-w-3xl w-full mx-auto px-8 md:px-16 py-10">
 
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-xs text-[#ad9a6f] mb-8">
-          <Link href="/dashboard" className="hover:text-[#615050] transition-colors">Dashboard</Link>
+        <nav className="flex items-center gap-2 text-xs text-[#ad9a6f] dark:text-[#c4a97a] mb-8">
+          <Link href="/dashboard" className="hover:text-[#615050] dark:hover:text-[#f5f0e8] transition-colors">Dashboard</Link>
           <span>/</span>
-          <Link href={`/dashboard/${spaceSlug}`} className="hover:text-[#615050] transition-colors">{space.name}</Link>
+          <Link href={`/dashboard/${spaceSlug}`} className="hover:text-[#615050] dark:hover:text-[#f5f0e8] transition-colors">{space.name}</Link>
           <span>/</span>
-          <span className="text-[#615050]">{isNew ? "New page" : (existing?.title || docSlug)}</span>
+          <span className="text-[#615050] dark:text-[#f5f0e8]">{isNew ? "New page" : (existing?.title || docSlug)}</span>
         </nav>
 
         {/* Access denied */}
         {!canEdit && (
-          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-sm flex items-center gap-2">
+          <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-xl text-amber-700 dark:text-amber-400 text-sm flex items-center gap-2">
             <Lock size={14} />
             Read-only — you don&apos;t have edit access to this space.
           </div>
@@ -267,12 +267,12 @@ export default function EditPage() {
 
           {/* Icon picker */}
           {showIconPicker && (
-            <div className="absolute top-14 left-0 z-50 bg-white border border-[#d4c9b0] rounded-2xl shadow-xl p-3 flex flex-wrap gap-2 w-64">
+            <div className="absolute top-14 left-0 z-50 bg-white dark:bg-[#251c0a] border border-[#d4c9b0] dark:border-[#3a3020] rounded-2xl shadow-xl p-3 flex flex-wrap gap-2 w-64">
               {ICON_PRESETS.map((e) => (
                 <button
                   key={e}
                   onClick={() => { setIcon(e); setShowIconPicker(false); }}
-                  className="text-2xl w-10 h-10 flex items-center justify-center rounded-lg hover:bg-[#f5f1e8] transition-colors"
+                  className="text-2xl w-10 h-10 flex items-center justify-center rounded-lg hover:bg-[#f5f1e8] dark:hover:bg-[#2e2410] transition-colors"
                 >
                   {e}
                 </button>
@@ -280,25 +280,25 @@ export default function EditPage() {
               <input
                 type="text"
                 placeholder="Or type an emoji…"
-                className="w-full mt-1 px-2 py-1 text-sm border border-[#d4c9b0] rounded-lg outline-none focus:border-[#ad9a6f] text-[#615050]"
+                className="w-full mt-1 px-2 py-1 text-sm border border-[#d4c9b0] dark:border-[#3a3020] rounded-lg outline-none focus:border-[#ad9a6f] text-[#615050] dark:text-[#f5f0e8] bg-transparent"
                 onChange={(e) => { if (e.target.value) setIcon(e.target.value); }}
               />
             </div>
           )}
 
-          {/* Cover/actions  */}
+          {/* Cover/actions */}
           <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
             {!cover && (
               <button
                 onClick={() => setShowCoverPicker((s) => !s)}
-                className="flex items-center gap-1 text-xs text-[#ad9a6f] hover:text-[#615050] border border-[#d4c9b0] px-2.5 py-1 rounded-lg transition-colors"
+                className="flex items-center gap-1 text-xs text-[#ad9a6f] dark:text-[#c4a97a] hover:text-[#615050] dark:hover:text-[#f5f0e8] border border-[#d4c9b0] dark:border-[#3a3020] px-2.5 py-1 rounded-lg transition-colors"
               >
                 <Globe size={11} /> Add cover
               </button>
             )}
             <button
               onClick={() => setShowIconPicker((s) => !s)}
-              className="flex items-center gap-1 text-xs text-[#ad9a6f] hover:text-[#615050] border border-[#d4c9b0] px-2.5 py-1 rounded-lg transition-colors"
+              className="flex items-center gap-1 text-xs text-[#ad9a6f] dark:text-[#c4a97a] hover:text-[#615050] dark:hover:text-[#f5f0e8] border border-[#d4c9b0] dark:border-[#3a3020] px-2.5 py-1 rounded-lg transition-colors"
             >
               <Smile size={11} /> Change icon
             </button>
@@ -307,12 +307,12 @@ export default function EditPage() {
 
         {/* Cover picker */}
         {showCoverPicker && (
-          <div className="mb-4 p-3 bg-[#f5f1e8] border border-[#d4c9b0] rounded-xl flex flex-wrap gap-2">
+          <div className="mb-4 p-3 bg-[#f5f1e8] dark:bg-[#251c0a] border border-[#d4c9b0] dark:border-[#3a3020] rounded-xl flex flex-wrap gap-2">
             {COVER_PRESETS.map((g, i) => (
               <button
                 key={i}
                 onClick={() => { setCover(g); setShowCoverPicker(false); }}
-                className="w-16 h-10 rounded-lg border-2 border-transparent hover:border-[#ad9a6f] transition-all"
+                className="w-16 h-10 rounded-lg border-2 border-transparent hover:border-[#ad9a6f] dark:hover:border-[#c4a97a] transition-all"
                 style={{ background: g }}
               />
             ))}
@@ -325,8 +325,8 @@ export default function EditPage() {
           suppressContentEditableWarning
           data-placeholder="Untitled"
           onInput={(e) => handleTitleChange(e.currentTarget.textContent ?? "")}
-          className="text-4xl md:text-5xl font-serif text-[#1a1508] font-bold leading-tight mb-1
-                     outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-[#d4c9b0]
+          className="text-4xl md:text-5xl font-serif text-[#1a1508] dark:text-[#f5f0e8] font-bold leading-tight mb-1
+                     outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-[#b0a088] dark:empty:before:text-[#4a3d2a]
                      break-words"
         >
           {title || ""}
@@ -334,7 +334,7 @@ export default function EditPage() {
 
         {/* Slug */}
         <div className="flex items-center gap-2 mb-8 mt-2">
-          <p className="text-[11px] font-mono text-[#c4b89a]">
+          <p className="text-[11px] font-mono text-[#8a7a6a] dark:text-[#6a5f52]">
             /docs/{spaceSlug}/{slug || "untitled"}
           </p>
           {isNew && (
@@ -343,14 +343,14 @@ export default function EditPage() {
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
               placeholder="custom-slug"
-              className="text-[11px] font-mono text-[#ad9a6f] border-b border-dashed border-[#d4c9b0] outline-none bg-transparent focus:border-[#ad9a6f] px-1"
+              className="text-[11px] font-mono text-[#ad9a6f] dark:text-[#c4a97a] border-b border-dashed border-[#d4c9b0] dark:border-[#3a3020] outline-none bg-transparent focus:border-[#ad9a6f] dark:focus:border-[#c4a97a] px-1"
             />
           )}
-          <span className="text-[10px] text-[#c4b89a] font-mono">· v{nextVersion}</span>
+          <span className="text-[10px] text-[#8a7a6a] dark:text-[#6a5f52] font-mono">· v{nextVersion}</span>
           {existing && (
             <Link
               href={`/docs/${spaceSlug}/${existing.slug}/history`}
-              className="text-[10px] text-[#ad9a6f] hover:underline ml-auto flex items-center gap-1"
+              className="text-[10px] text-[#ad9a6f] dark:text-[#c4a97a] hover:underline ml-auto flex items-center gap-1"
             >
               <Clock size={10} /> History
             </Link>
@@ -358,7 +358,7 @@ export default function EditPage() {
         </div>
 
         {/* Divider */}
-        <hr className="border-[#e0d9cc] mb-6" />
+        <hr className="border-[#e0d9cc] dark:border-[#2e2818] mb-6" />
 
         {/* Block editor */}
         <div className="min-h-[400px] pb-32">
@@ -372,9 +372,9 @@ export default function EditPage() {
 
       {/* ── Save toolbar (sticky bottom) ───────────────────────────────────────── */}
       {canEdit && (
-        <div className="sticky bottom-0 z-30 border-t border-[#d4c9b0] bg-[#fcfcfc]/90 backdrop-blur-md px-8 py-3">
+        <div className="sticky bottom-0 z-30 border-t border-[#d4c9b0] dark:border-[#2e2818] bg-[#fcfcfc]/90 dark:bg-[#191209]/90 backdrop-blur-md px-8 py-3">
           <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 text-xs text-[#ad9a6f]">
+            <div className="flex items-center gap-3 text-xs text-[#ad9a6f] dark:text-[#c4a97a]">
               {saving && (
                 <span className="flex items-center gap-1.5">
                   <span className="w-3 h-3 border-2 border-[#ad9a6f]/30 border-t-[#ad9a6f] rounded-full animate-spin" />
@@ -382,26 +382,26 @@ export default function EditPage() {
                 </span>
               )}
               {lastSaved && !saving && (
-                <span className="flex items-center gap-1.5 text-emerald-600">
+                <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
                   <Check size={12} /> Saved
                 </span>
               )}
-              {saveError && <span className="text-red-500">{saveError}</span>}
+              {saveError && <span className="text-red-500 dark:text-red-400">{saveError}</span>}
             </div>
 
             <div className="flex items-center gap-2">
               <button
                 onClick={() => doSave("draft")}
                 disabled={saving}
-                className="px-4 py-2 text-xs border border-[#d4c9b0] rounded-xl text-[#776a6a]
-                           hover:border-[#ad9a6f] hover:text-[#615050] disabled:opacity-40 transition-all"
+                className="px-4 py-2 text-xs border border-[#d4c9b0] dark:border-[#3a3020] rounded-xl text-[#776a6a] dark:text-[#9a8870]
+                           hover:border-[#ad9a6f] dark:hover:border-[#c4a97a] hover:text-[#615050] dark:hover:text-[#f5f0e8] disabled:opacity-40 transition-all"
               >
                 Save draft
               </button>
               <button
                 onClick={() => doSave("published")}
                 disabled={saving}
-                className="px-5 py-2 text-xs bg-[#615050] hover:bg-[#4a3d3d] text-white rounded-xl
+                className="px-5 py-2 text-xs bg-[#615050] dark:bg-[#3a2f22] hover:bg-[#4a3d3d] dark:hover:bg-[#4a3d2a] text-white rounded-xl
                            disabled:opacity-40 transition-all font-medium flex items-center gap-2"
               >
                 {saving ? (

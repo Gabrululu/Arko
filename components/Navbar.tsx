@@ -68,7 +68,7 @@ export function Navbar() {
   const hasConnectors = connectors.length > 0;
 
   if (!mounted) {
-    return <nav className="h-16 border-b border-[#d4c9b0]/20 bg-transparent w-full" />;
+    return <nav className="h-16 border-b border-[#d4c9b0]/20 dark:border-[#2e2818] bg-transparent w-full" />;
   }
 
   return (
@@ -77,7 +77,7 @@ export function Navbar() {
         ref={navRef}
         className={`sticky top-0 z-50 w-full transition-all duration-500 ${
           scrolled
-            ? "border-b border-[#d4c9b0]/20 bg-[#fcfcfc]/90 backdrop-blur-xl shadow-sm h-13"
+            ? "border-b border-[#d4c9b0]/20 dark:border-[#2e2818] bg-[#fcfcfc]/90 dark:bg-[#191209]/90 backdrop-blur-xl shadow-sm h-13"
             : "border-b border-transparent bg-transparent h-16"
         }`}
       >
@@ -90,9 +90,7 @@ export function Navbar() {
           <div className="flex items-center gap-8">
             <Link
               href="/"
-              className={`font-serif text-2xl italic font-bold tracking-tighter transition-colors duration-300 ${
-                scrolled ? "text-[#615050]" : "text-[#615050]"
-              }`}
+              className="font-serif text-2xl italic font-bold tracking-tighter text-[#615050] dark:text-[#f5f0e8] transition-colors duration-300"
             >
               arko
             </Link>
@@ -100,7 +98,7 @@ export function Navbar() {
             <div className="hidden md:flex items-center gap-6">
               <Link
                 href="/dashboard"
-                className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#776a6a] hover:text-[#615050] transition-colors"
+                className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#776a6a] dark:text-[#9a8870] hover:text-[#615050] dark:hover:text-[#f5f0e8] transition-colors"
               >
                 Dashboard
               </Link>
@@ -108,7 +106,7 @@ export function Navbar() {
                 href="https://braga.hoodi.arkiv.network"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-[10px] uppercase tracking-[0.2em] font-bold text-[#ad9a6f] hover:text-[#615050] transition-colors"
+                className="flex items-center gap-1 text-[10px] uppercase tracking-[0.2em] font-bold text-[#ad9a6f] dark:text-[#c4a97a] hover:text-[#615050] dark:hover:text-[#f5f0e8] transition-colors"
               >
                 Explorer <ExternalLink size={10} />
               </a>
@@ -117,7 +115,6 @@ export function Navbar() {
 
           {/* Actions */}
           <div className="flex items-center gap-4">
-            {/* Wrong network alert */}
             {isWrongNetwork && isConnected && (
               <button
                 onClick={() => switchChain?.({ chainId: BRAGA_ID })}
@@ -137,34 +134,34 @@ export function Navbar() {
                 <div className="relative">
                   <button
                     onClick={() => setMenuOpen(!menuOpen)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#f5f1e8] border border-[#d4c9b0]
-                               hover:border-[#ad9a6f] transition-all duration-200"
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#f5f1e8] dark:bg-[#251c0a] border border-[#d4c9b0] dark:border-[#3a3020]
+                               hover:border-[#ad9a6f] dark:hover:border-[#c4a97a] transition-all duration-200"
                   >
                     <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-[#ad9a6f] to-[#615050]" />
-                    <span className="text-[11px] font-mono text-[#615050]">
+                    <span className="text-[11px] font-mono text-[#615050] dark:text-[#c8b898]">
                       {address?.slice(0, 6)}...{address?.slice(-4)}
                     </span>
                     <ChevronDown
                       size={12}
-                      className={`text-[#ad9a6f] transition-transform duration-200 ${menuOpen ? "rotate-180" : ""}`}
+                      className={`text-[#ad9a6f] dark:text-[#c4a97a] transition-transform duration-200 ${menuOpen ? "rotate-180" : ""}`}
                     />
                   </button>
 
                   {menuOpen && (
                     <>
                       <div className="fixed inset-0 z-[-1]" onClick={() => setMenuOpen(false)} />
-                      <div className="absolute right-0 mt-2 w-52 rounded-2xl border border-[#d4c9b0] bg-[#fcfcfc] p-2 shadow-xl
+                      <div className="absolute right-0 mt-2 w-52 rounded-2xl border border-[#d4c9b0] dark:border-[#3a3020] bg-[#fcfcfc] dark:bg-[#1e1508] p-2 shadow-xl
                                       animate-in fade-in slide-in-from-top-2 duration-150">
-                        <div className="px-3 py-2.5 border-b border-[#f5f1e8] mb-1">
-                          <p className="text-[9px] uppercase tracking-widest font-bold text-[#ad9a6f]">Network</p>
+                        <div className="px-3 py-2.5 border-b border-[#f5f1e8] dark:border-[#2e2818] mb-1">
+                          <p className="text-[9px] uppercase tracking-widest font-bold text-[#ad9a6f] dark:text-[#c4a97a]">Network</p>
                           <div className="flex items-center gap-1.5 mt-0.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                            <p className="text-[11px] font-medium text-[#615050]">Braga Testnet</p>
+                            <p className="text-[11px] font-medium text-[#615050] dark:text-[#f5f0e8]">Braga Testnet</p>
                           </div>
                         </div>
                         <button
                           onClick={() => disconnect()}
-                          className="flex w-full items-center gap-2 px-3 py-2 text-xs text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="flex w-full items-center gap-2 px-3 py-2 text-xs text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
                         >
                           <LogOut size={14} /> Disconnect
                         </button>
@@ -176,10 +173,10 @@ export function Navbar() {
             ) : (
               <div className="flex flex-col items-end gap-2">
                 {error && (
-                  <div className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">{error.message}</div>
+                  <div className="text-xs text-red-600 bg-red-50 dark:bg-red-950/30 dark:text-red-400 px-2 py-1 rounded">{error.message}</div>
                 )}
                 {!hasWallet && (
-                  <div className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded hidden lg:block">
+                  <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 dark:text-amber-400 px-2 py-1 rounded hidden lg:block">
                     Install MetaMask or another Web3 wallet
                   </div>
                 )}

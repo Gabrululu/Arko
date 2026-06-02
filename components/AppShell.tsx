@@ -35,35 +35,35 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
 function Footer() {
   return (
-    <footer className="border-t border-[#d4c9b0]/30 bg-[#fcfcfc]" suppressHydrationWarning>
+    <footer className="border-t border-[#d4c9b0]/30 dark:border-[#2e2818] bg-[#fcfcfc] dark:bg-[#191209] transition-colors duration-200" suppressHydrationWarning>
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="grid sm:grid-cols-2 gap-12 mb-10">
           <div className="space-y-4">
-            <p className="font-serif text-2xl italic text-[#615050]">arko</p>
-            <p className="text-sm text-[#776a6a] max-w-sm leading-relaxed">
+            <p className="font-serif text-2xl italic text-[#615050] dark:text-[#f5f0e8]">arko</p>
+            <p className="text-sm text-[#776a6a] dark:text-[#9a8870] max-w-sm leading-relaxed">
               Sovereign Documentation. Immutable History. Every version of your work is
               cryptographically committed to the Braga chain.
             </p>
           </div>
           <div className="flex flex-wrap gap-x-8 gap-y-4 sm:justify-end items-start">
             <div className="flex flex-col gap-2">
-              <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#ad9a6f] mb-2">Platform</p>
-              <Link href="/" className="text-sm text-[#776a6a] hover:text-[#615050] transition-colors" suppressHydrationWarning>Explore</Link>
-              <Link href="/dashboard" className="text-sm text-[#776a6a] hover:text-[#615050] transition-colors" suppressHydrationWarning>Dashboard</Link>
+              <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#ad9a6f] dark:text-[#c4a97a] mb-2">Platform</p>
+              <Link href="/" className="text-sm text-[#776a6a] dark:text-[#9a8870] hover:text-[#615050] dark:hover:text-[#f5f0e8] transition-colors" suppressHydrationWarning>Explore</Link>
+              <Link href="/dashboard" className="text-sm text-[#776a6a] dark:text-[#9a8870] hover:text-[#615050] dark:hover:text-[#f5f0e8] transition-colors" suppressHydrationWarning>Dashboard</Link>
             </div>
             <div className="flex flex-col gap-2">
-              <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#ad9a6f] mb-2">Network</p>
-              <a href="https://explorer.braga.hoodi.arkiv.network" target="_blank" rel="noopener noreferrer" className="text-sm text-[#776a6a] hover:text-[#615050] transition-colors" suppressHydrationWarning>Braga Explorer</a>
-              <a href="https://arkiv.network" target="_blank" rel="noopener noreferrer" className="text-sm text-[#776a6a] hover:text-[#615050] transition-colors" suppressHydrationWarning>Arkiv Network</a>
+              <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#ad9a6f] dark:text-[#c4a97a] mb-2">Network</p>
+              <a href="https://explorer.braga.hoodi.arkiv.network" target="_blank" rel="noopener noreferrer" className="text-sm text-[#776a6a] dark:text-[#9a8870] hover:text-[#615050] dark:hover:text-[#f5f0e8] transition-colors" suppressHydrationWarning>Braga Explorer</a>
+              <a href="https://arkiv.network" target="_blank" rel="noopener noreferrer" className="text-sm text-[#776a6a] dark:text-[#9a8870] hover:text-[#615050] dark:hover:text-[#f5f0e8] transition-colors" suppressHydrationWarning>Arkiv Network</a>
             </div>
           </div>
         </div>
-        <div className="border-t border-[#d4c9b0]/20 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2 text-[10px] font-mono text-[#ad9a6f] uppercase tracking-widest">
-            <span className="w-1 h-1 rounded-full bg-[#ad9a6f] animate-pulse" />
+        <div className="border-t border-[#d4c9b0]/20 dark:border-[#2e2818] pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-2 text-[10px] font-mono text-[#ad9a6f] dark:text-[#c4a97a] uppercase tracking-widest">
+            <span className="w-1 h-1 rounded-full bg-[#ad9a6f] dark:bg-[#c4a97a] animate-pulse" />
             Built on Arkiv · Braga Testnet
           </div>
-          <p className="text-[10px] text-[#776a6a] uppercase tracking-widest font-medium">
+          <p className="text-[10px] text-[#776a6a] dark:text-[#6a5f52] uppercase tracking-widest font-medium">
             © {new Date().getFullYear()} Arko Protocol · Open Source
           </p>
         </div>

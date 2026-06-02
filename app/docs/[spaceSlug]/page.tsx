@@ -140,9 +140,10 @@ export default function SpacePage() {
               alignItems: "center",
               gap: "8px",
               padding: "8px 16px",
-              border: "1px solid rgba(255,252,246,0.15)",
+              border: "1px solid #d4c9b0",
               borderRadius: "6px",
-              color: "rgba(255,252,246,0.5)",
+              backgroundColor: "#f5f1e8",
+              color: "#615050",
               fontSize: "0.85rem",
               textDecoration: "none",
               fontFamily: "monospace",
@@ -154,9 +155,10 @@ export default function SpacePage() {
               marginLeft: "auto",
               fontSize: "0.65rem",
               padding: "1px 5px",
-              border: "1px solid rgba(255,252,246,0.2)",
+              border: "1px solid #d4c9b0",
               borderRadius: "3px",
-              color: "rgba(255,252,246,0.3)",
+              backgroundColor: "#e8e3d8",
+              color: "#776a6a",
             }}>⌘K</kbd>
           </Link>
         </div>

@@ -43,7 +43,7 @@ export function AnimatedCounter({ value, label }: { value: string; label: string
       >
         0
       </span>
-      <span className="block text-[10px] uppercase tracking-[0.25em] text-[#6a5f52] mt-2 font-mono">
+      <span className="block text-[10px] uppercase tracking-[0.25em] text-[#9a8870] mt-2 font-mono">
         {label}
       </span>
     </div>

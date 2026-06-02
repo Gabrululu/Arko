@@ -3,6 +3,7 @@ import { Playfair_Display, Inter } from "next/font/google";
 import { cookies } from "next/headers";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { ShutterReveal } from "@/components/ShutterReveal";
 import { Navbar } from "@/components/Navbar";
 import { CustomCursor } from "@/components/CustomCursor";
@@ -33,18 +34,24 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const cookie = cookieStore.get("wagmi_store")?.value || null;
 
   return (
-    <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
+    <html lang="en" className={`${playfair.variable} ${inter.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Anti-flash: apply stored theme before first paint */}
+        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem('arko-theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}` }} />
+      </head>
       <body
         suppressHydrationWarning
-        className="min-h-screen bg-[#fcfcfc] text-[#615050] antialiased font-sans"
+        className="min-h-screen bg-[#fcfcfc] dark:bg-[#191209] text-[#615050] dark:text-[#f5f0e8] antialiased font-sans transition-colors duration-200"
       >
         <Providers cookie={cookie}>
-          <CustomCursor />
-          <CommandPalette />
-          <ShutterReveal>
-            <Navbar />
-            <AppShell>{children}</AppShell>
-          </ShutterReveal>
+          <ThemeProvider>
+            <CustomCursor />
+            <CommandPalette />
+            <ShutterReveal>
+              <Navbar />
+              <AppShell>{children}</AppShell>
+            </ShutterReveal>
+          </ThemeProvider>
         </Providers>
       </body>
     </html>

@@ -124,8 +124,8 @@ async function SpacesGrid() {
             )}
 
             <div className="mt-auto pt-4 flex items-center justify-between border-t border-[#2a2318]/60">
-              <span className="text-xs font-mono text-[#5a4f42]">/{space.slug}</span>
-              <span className="text-xs font-mono text-[#5a4f42]" title={space.owner}>
+              <span className="text-xs font-mono text-[#8a7a6a]">/{space.slug}</span>
+              <span className="text-xs font-mono text-[#8a7a6a]" title={space.owner}>
                 {truncate(space.owner)}
               </span>
             </div>
@@ -230,7 +230,7 @@ export default function HomePage() {
             maxWidth: "min(44ch, 52vw)",
           }}
         >
-          <p className="text-[#6a5f52] text-[10px] tracking-[0.3em] uppercase font-mono mb-3">
+          <p className="text-[#9a8870] text-[10px] tracking-[0.3em] uppercase font-mono mb-3">
             Sovereign documentation
           </p>
           <h2
@@ -312,7 +312,7 @@ export default function HomePage() {
             {WHY_ARKO_ITEMS.map((item, i) => (
               <RevealSection key={item.num} delay={i * 0.04}>
                 <div className="group py-9 grid grid-cols-[48px_1fr] md:grid-cols-[80px_240px_1fr] gap-6 items-center cursor-default">
-                  <span className="text-[#3a2f22] text-sm font-mono group-hover:text-[#6a5f52] transition-colors duration-300">
+                  <span className="text-[#6a5f52] text-sm font-mono group-hover:text-[#9a8870] transition-colors duration-300">
                     {item.num}
                   </span>
                   <h3 className="text-[#F5F0E8] font-serif text-xl font-normal group-hover:text-[#ad9a6f] transition-colors duration-300">
@@ -343,10 +343,10 @@ export default function HomePage() {
               <RevealSection key={step.num} delay={i * 0.08}>
                 <div className="group bg-[#f5f1e8] p-10 flex flex-col gap-6 h-full hover:bg-[#ede8dc] transition-colors duration-500">
                   <div className="flex items-start justify-between">
-                    <span className="text-3xl text-[#d4c9b0] group-hover:text-[#ad9a6f] transition-colors duration-500">
+                    <span className="text-3xl text-[#b0a080] group-hover:text-[#ad9a6f] transition-colors duration-500">
                       {step.icon}
                     </span>
-                    <span className="text-[10px] font-mono text-[#c4b89a] tracking-widest">{step.num}</span>
+                    <span className="text-[10px] font-mono text-[#8a7a6a] tracking-widest">{step.num}</span>
                   </div>
                   <div>
                     <h3 className="font-serif text-2xl text-[#615050] mb-3 font-normal">{step.title}</h3>
@@ -405,7 +405,7 @@ export default function HomePage() {
                       <td className="py-4 px-6 text-center bg-emerald-50/50 group-hover:bg-emerald-50 transition-colors">
                         <span className="text-emerald-700 font-semibold text-sm">{row.a}</span>
                       </td>
-                      <td className="py-4 px-6 text-center text-[#a09080] text-sm">{row.t}</td>
+                      <td className="py-4 px-6 text-center text-[#776a6a] text-sm">{row.t}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -421,12 +421,12 @@ export default function HomePage() {
           <RevealSection>
             <div className="flex items-end justify-between mb-14 flex-wrap gap-6">
               <div>
-                <p className="text-[#6a5f52] text-[10px] tracking-[0.3em] uppercase font-mono mb-4">Community</p>
+                <p className="text-[#9a8870] text-[10px] tracking-[0.3em] uppercase font-mono mb-4">Community</p>
                 <h2 className="text-[#F5F0E8] font-serif font-normal leading-[1.1] text-[clamp(28px,4vw,56px)]">
                   Built in the open.
                 </h2>
               </div>
-              <p className="text-[#6a5f52] text-sm max-w-xs leading-relaxed">
+              <p className="text-[#9a8870] text-sm max-w-xs leading-relaxed">
                 Browse documentation spaces published by the community on Arkiv.
               </p>
             </div>
@@ -450,7 +450,7 @@ export default function HomePage() {
 
         <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
           <RevealSection from="clip">
-            <p className="text-[#6a5f52] text-[10px] tracking-[0.4em] uppercase font-mono mb-8">Ready?</p>
+            <p className="text-[#9a8870] text-[10px] tracking-[0.4em] uppercase font-mono mb-8">Ready?</p>
             <h2
               className="font-serif font-normal text-[#F5F0E8] leading-[0.95] mb-10"
               style={{ fontSize: "clamp(3rem, 9vw, 8rem)" }}
@@ -459,7 +459,7 @@ export default function HomePage() {
             </h2>
           </RevealSection>
           <RevealSection delay={0.15}>
-            <p className="text-[#6a5f52] text-base mb-12 max-w-md mx-auto leading-relaxed">
+            <p className="text-[#9a8870] text-base mb-12 max-w-md mx-auto leading-relaxed">
               Connect your wallet. Create a space. Own your docs. No sign-up required.
             </p>
             <Link
