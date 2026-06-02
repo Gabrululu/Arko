@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useLayoutEffect, useState, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAccount, useWalletClient } from "wagmi";
 import { createSigningClient } from "@/lib/arkiv/client";
@@ -30,6 +30,8 @@ export default function EditPage() {
   const { address, isConnected } = useAccount();
   const { data: walletClient } = useWalletClient();
   const pageRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLDivElement>(null);
+  const titleSkipSyncRef = useRef(false);
 
   const spaceSlug = params.spaceSlug as string;
   const docSlug = params.docSlug as string;
@@ -103,6 +105,19 @@ export default function EditPage() {
     load();
   }, [address, spaceSlug, docSlug, isNew]);
 
+  // Sync title into the DOM only on external changes (initial load).
+  // While the user types, titleSkipSyncRef prevents the cursor from resetting.
+  useLayoutEffect(() => {
+    const el = titleRef.current;
+    if (!el || titleSkipSyncRef.current) {
+      titleSkipSyncRef.current = false;
+      return;
+    }
+    if (el.textContent !== title) {
+      el.textContent = title;
+    }
+  }, [title]);
+
   // Page entrance animation
   useEffect(() => {
     if (!pageRef.current || loading) return;
@@ -110,6 +125,7 @@ export default function EditPage() {
   }, [loading]);
 
   const handleTitleChange = (val: string) => {
+    titleSkipSyncRef.current = true; // prevent DOM clobber while user types
     setTitle(val);
     if (isNew) {
       setSlug(
@@ -321,6 +337,7 @@ export default function EditPage() {
 
         {/* Title */}
         <div
+          ref={titleRef}
           contentEditable={canEdit}
           suppressContentEditableWarning
           data-placeholder="Untitled"
@@ -328,9 +345,7 @@ export default function EditPage() {
           className="text-4xl md:text-5xl font-serif text-[#1a1508] dark:text-[#f5f0e8] font-bold leading-tight mb-1
                      outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-[#b0a088] dark:empty:before:text-[#4a3d2a]
                      break-words"
-        >
-          {title || ""}
-        </div>
+        />
 
         {/* Slug */}
         <div className="flex items-center gap-2 mb-8 mt-2">
